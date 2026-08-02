@@ -31,6 +31,7 @@
   .header h1 { font-size:16px; margin:0; }
   .round-pill { font-size:12px; background:#22262d; padding:4px 10px; border-radius:20px; color:#ffd43b; font-weight:700; }
   .help-btn { background:#22262d; border:none; color:#fff; width:30px; height:30px; border-radius:50%; font-size:14px; }
+  .help-btn.muted { opacity:0.4; }
 
   /* ---------- 플레이어 상태 스트립 (가로) ---------- */
   .player-strip { display:flex; gap:6px; margin-bottom:8px; }
@@ -150,14 +151,76 @@
   .dev-modal .dev-name { font-size:17px; font-weight:800; color:#ffd43b; margin-bottom:2px; }
   .dev-modal .dev-school { font-size:13px; color:#ccc; margin-bottom:16px; }
   .dev-modal .dev-quote { font-size:13px; line-height:1.7; color:#aab0b8; border-top:1px solid #2a2e35; padding-top:14px; }
+
+  /* ---------- 화면 흔들림 (피해 시) ---------- */
+  @keyframes shakeAnim {
+    10%, 90% { transform: translateX(-2px); }
+    20%, 80% { transform: translateX(3px); }
+    30%, 50%, 70% { transform: translateX(-5px); }
+    40%, 60% { transform: translateX(5px); }
+  }
+  #app.shake { animation: shakeAnim 0.35s ease-in-out; }
+
+  /* ---------- 반짝임(스파클) 이펙트 ---------- */
+  @keyframes sparkleAnim {
+    0% { transform: scale(0.2); opacity: 1; }
+    100% { transform: scale(2.4); opacity: 0; }
+  }
+  .sparkle-burst {
+    position:fixed; pointer-events:none; z-index:40;
+    width:36px; height:36px; margin:-18px 0 0 -18px;
+    border-radius:50%;
+    background: radial-gradient(circle, rgba(255,212,59,0.9) 0%, rgba(255,212,59,0) 70%);
+    animation: sparkleAnim 0.5s ease-out forwards;
+  }
+
+  /* ---------- 라이트 테마 ---------- */
+  body.light-theme { background:#f2f3f5; color:#1a1d24; }
+  body.light-theme .card { background:#fff; color:#1a1d24; box-shadow:0 1px 4px rgba(0,0,0,0.08); }
+  body.light-theme .card h3 { color:#777; }
+  body.light-theme .header h1 { color:#1a1d24; }
+  body.light-theme .round-pill { background:#e9ebee; color:#a17a00; }
+  body.light-theme .help-btn { background:#e9ebee; color:#1a1d24; }
+  body.light-theme .p-chip { background:#fff; box-shadow:0 1px 3px rgba(0,0,0,0.08); }
+  body.light-theme .p-chip .n { color:#777; }
+  body.light-theme .act-btn { background:#eceef1; color:#1a1d24; }
+  body.light-theme .act-btn.primary { background:#3b5bdb; color:#fff; }
+  body.light-theme .act-btn.danger { background:#e0392f; color:#fff; }
+  body.light-theme .hc { background:#fff; border-color:#e2e5e9; color:#1a1d24; }
+  body.light-theme .log-head { color:#888; }
+  body.light-theme .log { color:#555; }
+  body.light-theme .empty-hint { color:#999; }
+  body.light-theme #startScreen { background: radial-gradient(circle at 50% 30%, #eef0f3 0%, #dadde2 75%); }
+  body.light-theme #startScreen h1 { color:#1a1d24; }
+  body.light-theme .start-btn { background:#e9ebee; color:#1a1d24; }
+  body.light-theme .start-btn.primary { background:#3b5bdb; color:#fff; }
+  body.light-theme .modal { background:#fff; color:#1a1d24; }
+  body.light-theme .dev-modal .dev-school { color:#444; }
+  body.light-theme .dev-modal .dev-quote { color:#666; border-color:#e2e5e9; }
+  body.light-theme .target-list button, body.light-theme .choices button, body.light-theme .modal button.wide.secondary { background:#eceef1; color:#1a1d24; }
+
+  /* ---------- 난이도 선택 (시작화면) ---------- */
+  .difficulty-row { display:flex; gap:6px; width:100%; max-width:300px; margin-bottom:14px; }
+  .diff-btn { flex:1; padding:9px 4px; border:none; border-radius:8px; font-size:11.5px; background:#22262d; color:#8a929c; }
+  .diff-btn.selected { background:#3b5bdb; color:#fff; font-weight:700; }
+  body.light-theme .diff-btn { background:#e9ebee; color:#888; }
+  body.light-theme .diff-btn.selected { background:#3b5bdb; color:#fff; }
 </style>
 </head>
 <body>
 
 <div id="startScreen">
+  <button class="help-btn" id="themeBtn" style="position:absolute; top:16px; right:16px;">T</button>
   <img class="start-icon" src="./icon-512.png" alt="Time Heist 24">
   <h1>Time Heist 24</h1>
   <div class="start-sub">시간을 훔치고, 시간을 지켜라</div>
+
+  <div class="difficulty-row">
+    <button class="diff-btn" id="diffEasy" data-diff="easy">쉬움</button>
+    <button class="diff-btn selected" id="diffNormal" data-diff="normal">보통</button>
+    <button class="diff-btn" id="diffHard" data-diff="hard">어려움</button>
+  </div>
+
   <div class="start-menu">
     <button class="start-btn primary" id="newGameBtn">새 게임하기</button>
     <button class="start-btn" id="continueBtn">이어하기</button>
@@ -170,6 +233,7 @@
     <h1>Time Heist 24</h1>
     <div style="display:flex; align-items:center; gap:8px;">
       <span class="round-pill" id="roundLabel">R1/12</span>
+      <button class="help-btn" id="soundBtn">S</button>
       <button class="help-btn" id="helpBtn">?</button>
     </div>
   </div>
@@ -203,6 +267,164 @@
 <div id="tutorialRoot"></div>
 
 <script>
+/* ============================================================
+   0-1. 사운드 (Web Audio API로 직접 생성, 음원 파일 없음)
+   ============================================================ */
+let audioCtx = null;
+let soundEnabled = true;
+try { soundEnabled = localStorage.getItem('time24_sound') !== '0'; } catch(e){}
+
+function getAudioCtx(){
+  if (!audioCtx){
+    const AC = window.AudioContext || window.webkitAudioContext;
+    if (!AC) return null;
+    audioCtx = new AC();
+  }
+  if (audioCtx.state === 'suspended') audioCtx.resume();
+  return audioCtx;
+}
+
+function playTone(freq, duration, type, startGain, endFreq){
+  if (!soundEnabled) return;
+  const ac = getAudioCtx();
+  if (!ac) return;
+  const osc = ac.createOscillator();
+  const gain = ac.createGain();
+  osc.type = type || 'sine';
+  osc.frequency.setValueAtTime(freq, ac.currentTime);
+  if (endFreq) osc.frequency.exponentialRampToValueAtTime(endFreq, ac.currentTime + duration);
+  gain.gain.setValueAtTime(startGain || 0.16, ac.currentTime);
+  gain.gain.exponentialRampToValueAtTime(0.001, ac.currentTime + duration);
+  osc.connect(gain); gain.connect(ac.destination);
+  osc.start();
+  osc.stop(ac.currentTime + duration);
+}
+
+// 버튼 탭 — 짧은 "뽁" 소리
+function playTap(){
+  playTone(720, 0.07, 'triangle', 0.14, 480);
+}
+
+// 캐릭터 이동 — "스윽" 화이트노이즈 스윕
+function playSlide(){
+  if (!soundEnabled) return;
+  const ac = getAudioCtx();
+  if (!ac) return;
+  const duration = 0.16;
+  const bufferSize = Math.max(1, Math.floor(ac.sampleRate * duration));
+  const buffer = ac.createBuffer(1, bufferSize, ac.sampleRate);
+  const data = buffer.getChannelData(0);
+  for (let i=0;i<bufferSize;i++){
+    data[i] = (Math.random()*2-1) * (1 - i/bufferSize);
+  }
+  const noise = ac.createBufferSource();
+  noise.buffer = buffer;
+  const filter = ac.createBiquadFilter();
+  filter.type = 'bandpass';
+  filter.Q.value = 0.7;
+  filter.frequency.setValueAtTime(2200, ac.currentTime);
+  filter.frequency.exponentialRampToValueAtTime(500, ac.currentTime + duration);
+  const gain = ac.createGain();
+  gain.gain.setValueAtTime(0.2, ac.currentTime);
+  gain.gain.exponentialRampToValueAtTime(0.001, ac.currentTime + duration);
+  noise.connect(filter); filter.connect(gain); gain.connect(ac.destination);
+  noise.start();
+}
+
+// 시간 획득 (충전소/은행/보상/탈출) — 밝은 2음 차임
+function playCoin(){
+  playTone(660, 0.09, 'triangle', 0.14);
+  setTimeout(()=>playTone(880, 0.13, 'triangle', 0.14), 55);
+}
+
+// 피해 (위험지역/함정/전투 패배) — 낮게 깔리는 톤
+function playHit(){
+  playTone(190, 0.18, 'sawtooth', 0.18, 90);
+}
+
+// 카드 획득/사용 — 짧고 가벼운 틱
+function playCard(){
+  playTone(500, 0.05, 'square', 0.09, 720);
+}
+
+// ---------- 배경음악 (절차적 앰비언트 드론, 음원 파일 없음) ----------
+let bgmNodes = null;
+function startBGM(){
+  if (!soundEnabled || bgmNodes) return;
+  const ac = getAudioCtx();
+  if (!ac) return;
+  const masterGain = ac.createGain();
+  masterGain.gain.value = 0.05;
+  masterGain.connect(ac.destination);
+
+  const freqs = [110, 164.81, 196]; // A2 - E3 - G3, 은은한 마이너 코드
+  const oscs = freqs.map(f=>{
+    const o = ac.createOscillator();
+    o.type = 'sine';
+    o.frequency.value = f;
+    const g = ac.createGain();
+    g.gain.value = 1/freqs.length;
+    o.connect(g); g.connect(masterGain);
+    o.start();
+    return o;
+  });
+
+  // 느린 LFO로 볼륨을 은은하게 흔들어 정적인 느낌을 줄임
+  const lfo = ac.createOscillator();
+  lfo.frequency.value = 0.12;
+  const lfoGain = ac.createGain();
+  lfoGain.gain.value = 0.025;
+  lfo.connect(lfoGain);
+  lfoGain.connect(masterGain.gain);
+  lfo.start();
+
+  bgmNodes = { oscs, lfo, masterGain };
+}
+function stopBGM(){
+  if (!bgmNodes) return;
+  try {
+    bgmNodes.oscs.forEach(o=>o.stop());
+    bgmNodes.lfo.stop();
+  } catch(e){}
+  bgmNodes = null;
+}
+
+// 버튼(모든 <button>) 탭 시 자동으로 소리나게 — 캡처 단계 위임 리스너
+document.addEventListener('click', (e)=>{
+  const btn = e.target.closest('button');
+  if (btn) playTap();
+}, true);
+
+// ---------- 진동 (지원 기기에서만) ----------
+function vibrate(pattern){
+  try { if (navigator.vibrate) navigator.vibrate(pattern); } catch(e){}
+}
+
+// ---------- 화면 흔들림 (피해 시) ----------
+function triggerShake(){
+  const app = document.getElementById('app');
+  app.classList.remove('shake');
+  void app.offsetWidth; // 강제 리플로우로 애니메이션 재시작
+  app.classList.add('shake');
+}
+
+// ---------- 반짝임 이펙트 (건물 점령/카드 획득 시 해당 칸 위치에 표시) ----------
+function spawnSparkleAtCell(col, row){
+  const rect = canvas.getBoundingClientRect();
+  const scaleX = rect.width / LOGICAL_SIZE;
+  const scaleY = rect.height / LOGICAL_SIZE;
+  const x = rect.left + (col*50 + 25) * scaleX;
+  const y = rect.top + (row*50 + 25) * scaleY;
+
+  const el = document.createElement('div');
+  el.className = 'sparkle-burst';
+  el.style.left = x + 'px';
+  el.style.top = y + 'px';
+  document.body.appendChild(el);
+  setTimeout(()=>el.remove(), 520);
+}
+
+
 /* ============================================================
    0. 튜토리얼
    ============================================================ */
@@ -282,6 +504,67 @@ function closeTutorial(){
   try { localStorage.setItem('time24_seen_tutorial','1'); } catch(e){}
 }
 document.getElementById('helpBtn').addEventListener('click', showTutorial);
+
+const DIFFICULTY_MULTIPLIERS = {
+  easy:   { aggro:0.6, caution:0.9, hoarding:0.75 },
+  normal: { aggro:1.0, caution:1.0, hoarding:1.0 },
+  hard:   { aggro:1.25, caution:1.2, hoarding:1.15 },
+};
+let difficulty = 'normal';
+try { difficulty = localStorage.getItem('time24_difficulty') || 'normal'; } catch(e){}
+
+function scaledPersonality(base){
+  const m = DIFFICULTY_MULTIPLIERS[difficulty] || DIFFICULTY_MULTIPLIERS.normal;
+  return {
+    aggro: Math.min(0.95, base.aggro * m.aggro),
+    caution: Math.min(0.95, base.caution * m.caution),
+    hoarding: Math.min(0.95, base.hoarding * m.hoarding),
+  };
+}
+
+
+function updateSoundBtn(){
+  const btn = document.getElementById('soundBtn');
+  btn.textContent = soundEnabled ? 'S' : 'X';
+  btn.classList.toggle('muted', !soundEnabled);
+}
+document.getElementById('soundBtn').addEventListener('click', ()=>{
+  soundEnabled = !soundEnabled;
+  try { localStorage.setItem('time24_sound', soundEnabled?'1':'0'); } catch(e){}
+  updateSoundBtn();
+  if (!soundEnabled) stopBGM();
+  else if (gameEntered) startBGM();
+});
+updateSoundBtn();
+
+/* ---------- 테마 토글 ---------- */
+let lightTheme = false;
+try { lightTheme = localStorage.getItem('time24_theme') === 'light'; } catch(e){}
+function applyTheme(){
+  document.body.classList.toggle('light-theme', lightTheme);
+}
+document.getElementById('themeBtn').addEventListener('click', ()=>{
+  lightTheme = !lightTheme;
+  try { localStorage.setItem('time24_theme', lightTheme ? 'light' : 'dark'); } catch(e){}
+  applyTheme();
+});
+applyTheme();
+
+/* ---------- 난이도 선택 (시작화면) ---------- */
+function updateDifficultyButtons(){
+  ['easy','normal','hard'].forEach(d=>{
+    const el = document.getElementById('diff'+d.charAt(0).toUpperCase()+d.slice(1));
+    if (el) el.classList.toggle('selected', d===difficulty);
+  });
+}
+['diffEasy','diffNormal','diffHard'].forEach(id=>{
+  document.getElementById(id).addEventListener('click', (e)=>{
+    difficulty = e.currentTarget.dataset.diff;
+    try { localStorage.setItem('time24_difficulty', difficulty); } catch(e){}
+    updateDifficultyButtons();
+  });
+});
+updateDifficultyButtons();
 
 /* ============================================================
    1. 맵 데이터
@@ -393,9 +676,9 @@ function makePlayer(id, name, type, personality, start){
 function createInitialPlayers(){
   return [
     makePlayer(0, '나', 'human', null, START_COORDS[0]),
-    makePlayer(1, '무법자', 'ai', {aggro:0.85, caution:0.15, hoarding:0.10}, START_COORDS[1]),
-    makePlayer(2, '은행가', 'ai', {aggro:0.20, caution:0.60, hoarding:0.90}, START_COORDS[2]),
-    makePlayer(3, '탐험가', 'ai', {aggro:0.40, caution:0.30, hoarding:0.30}, START_COORDS[3]),
+    makePlayer(1, '무법자', 'ai', scaledPersonality({aggro:0.85, caution:0.15, hoarding:0.10}), START_COORDS[1]),
+    makePlayer(2, '은행가', 'ai', scaledPersonality({aggro:0.20, caution:0.60, hoarding:0.90}), START_COORDS[2]),
+    makePlayer(3, '탐험가', 'ai', scaledPersonality({aggro:0.40, caution:0.30, hoarding:0.30}), START_COORDS[3]),
   ];
 }
 function resetCellStates(){
@@ -409,6 +692,7 @@ function resetCellStates(){
 let players = createInitialPlayers();
 
 let currentPlayerIdx = 0;
+let gameEntered = false;
 let round = 1;
 let gameOver = false;
 let uiLocked = false;
@@ -567,6 +851,14 @@ function roundRect(x, y, w, h, r){
 const canvas = document.getElementById('board');
 const ctx = canvas.getContext('2d');
 
+// ---------- 레티나(고해상도) 대응 ----------
+const LOGICAL_SIZE = 350; // 기존 좌표 체계(SIZE=50 * 7칸)는 그대로 유지
+const DPR = Math.min(window.devicePixelRatio || 1, 3);
+canvas.width = LOGICAL_SIZE * DPR;
+canvas.height = LOGICAL_SIZE * DPR;
+ctx.scale(DPR, DPR);
+ctx.imageSmoothingEnabled = true;
+
 function isAdjacent(a,b){ return manhattan(a,b) === 1; }
 function alivePlayers(){ return players.filter(p=>p.alive); }
 function adjacentEnemies(p){
@@ -574,7 +866,7 @@ function adjacentEnemies(p){
 }
 
 function draw(){
-  ctx.clearRect(0,0,canvas.width,canvas.height);
+  ctx.clearRect(0,0,LOGICAL_SIZE,LOGICAL_SIZE);
   const cur = players[currentPlayerIdx];
 
   for (let row=0; row<7; row++){
@@ -641,7 +933,7 @@ function draw(){
 
 function canvasScale(){
   const rect = canvas.getBoundingClientRect();
-  return { sx: canvas.width/rect.width, sy: canvas.height/rect.height, rect };
+  return { sx: LOGICAL_SIZE/rect.width, sy: LOGICAL_SIZE/rect.height, rect };
 }
 
 /* ============================================================
@@ -771,6 +1063,7 @@ function onEnterCell(player, state, col, row){
       if (ready){
         player.time += 2;
         state.chargeUsedRound = round;
+        playCoin();
         log(`${player.name}: ⚡ 충전, +2시간 (${player.time}h)`);
       } else {
         log(`${player.name}: ⚡ 충전소 재활성화 대기 중`);
@@ -781,6 +1074,8 @@ function onEnterCell(player, state, col, row){
       if (player.hand.length < 3){
         const c = drawRandomCard();
         player.hand.push(c);
+        playCard();
+        spawnSparkleAtCell(col, row);
         log(`${player.name}: 🎴 카드 획득 — ${CARD_DEFS[c].name}`);
       } else {
         log(`${player.name}: 🎴 카드칸 도착, 손패 가득 참`);
@@ -792,6 +1087,7 @@ function onEnterCell(player, state, col, row){
         player.time += 6;
         player.escapeMode = false;
         player.escapeUsed = true;
+        playCoin();
         log(`${player.name}: 🌀 탈출 성공! +6시간 (${player.time}h)`);
       }
       break;
@@ -813,7 +1109,7 @@ function revealTrap(player, state){
   const t = state.trap;
   state.trap = null;
   if (t==='trap'){ applyDamage(player,2); log(`${player.name}: 💥 함정 발동! -2시간 (${player.time}h)`); }
-  else if (t==='reward'){ player.time += 2; log(`${player.name}: 🎁 보상 발견, +2시간 (${player.time}h)`); }
+  else if (t==='reward'){ player.time += 2; playCoin(); log(`${player.name}: 🎁 보상 발견, +2시간 (${player.time}h)`); }
   else { log(`${player.name}: 🕳️ 빈 함정이었음`); }
 }
 
@@ -826,6 +1122,13 @@ function applyDamage(player, amount){
     if (absorbed>0) log(`${player.name}: 🛡️ 방패로 ${absorbed}시간 경감`);
   }
   player.time -= dmg;
+  if (dmg > 0){
+    playHit();
+    if (player.type === 'human'){
+      vibrate(60);
+      triggerShake();
+    }
+  }
   return dmg;
 }
 
@@ -840,6 +1143,7 @@ function checkEscapeModeEnter(player){
 function checkElimination(player){
   if (player.time<=0 && player.alive){
     player.alive = false;
+    if (player.type === 'human') vibrate([50,60,50,60,120]);
     log(`☠ ${player.name}: 탈락`);
   }
 }
@@ -867,6 +1171,7 @@ function tryMove(col, row){
   player.time -= cost;
   player.col = col; player.row = row;
   player.movesThisTurn += 1;
+  playSlide();
 
   if (cost>0) log(`${player.name}: 추가 이동, -1시간 (${player.time}h)`);
   else log(`${player.name}: 이동`);
@@ -1054,11 +1359,13 @@ document.getElementById('occupyBtn').addEventListener('click', ()=>{
   state.occupiedBy = player.id;
   state.trap = ['trap','empty','reward'][Math.floor(Math.random()*3)];
   player.actionUsedThisTurn = true;
+  spawnSparkleAtCell(player.col, player.row);
 
   log(`${player.name}: 🏢 건물 점령${wasEnemyOwned?' (탈환)':''}, -${cost}시간`);
   if (player.hand.length<3){
     const c = drawRandomCard();
     player.hand.push(c);
+    playCard();
     log(`${player.name}: 점령 보상 카드 — ${CARD_DEFS[c].name}`);
   }
   checkElimination(player);
@@ -1084,6 +1391,7 @@ document.getElementById('restBtn').addEventListener('click', ()=>{
   if (player.actionUsedThisTurn) return;
   player.time += 2;
   player.actionUsedThisTurn = true;
+  playCoin();
   log(`${player.name}: 💤 휴식 — +2시간 (${player.time}h)`);
   refresh();
 });
@@ -1314,8 +1622,9 @@ function aiTakeTurn(ai){
       const wasEnemy = curState.occupiedBy!==null;
       curState.occupiedBy = ai.id;
       curState.trap = ['trap','empty','reward'][Math.floor(Math.random()*3)];
+      spawnSparkleAtCell(ai.col, ai.row);
       log(`${ai.name}: 🏢 건물 점령${wasEnemy?' (탈환)':''}, -${cost}시간`);
-      if (ai.hand.length<3){ const c=drawRandomCard(); ai.hand.push(c); log(`${ai.name}: 점령 보상 카드 획득`); }
+      if (ai.hand.length<3){ const c=drawRandomCard(); ai.hand.push(c); playCard(); log(`${ai.name}: 점령 보상 카드 획득`); }
       checkElimination(ai);
     }
     endAiTurnAfterDelay();
@@ -1391,6 +1700,7 @@ function stepToward(ai, target){
 
   ai.lastMove = { col: ai.col, row: ai.row, cost:0 };
   ai.col = best.col; ai.row = best.row;
+  playSlide();
   log(`${ai.name}: 이동 (${COLS[best.col]}${best.row+1})`);
   const state = cellStates[cellKey(best.col,best.row)];
   onEnterCell(ai, state, best.col, best.row);
@@ -1401,6 +1711,7 @@ function stepToward(ai, target){
    ============================================================ */
 function endGame(){
   gameOver = true;
+  stopBGM();
   const scored = players.map(p=>({
     p,
     total: p.time + p.bankedTime + buildingCountOf(p.id)*1,
@@ -1414,12 +1725,116 @@ function endGame(){
       <br><span style="color:#888;font-size:11px;">보유 ${s.p.time}h + 은행 ${s.p.bankedTime}h + 건물 ${buildingCountOf(s.p.id)}개${s.p.alive?'':' (탈락)'}</span></div>`;
     log(`${i+1}위: ${s.p.name} — 총 ${s.total}점`);
   });
-  html += `<button class="wide" id="closeResult">닫기</button>
+  html += `<button class="wide" id="shareResult">결과 이미지 공유하기</button>
+  <button class="wide secondary" id="closeResult">닫기</button>
   </div></div>`;
   modalRoot.innerHTML = html;
   document.getElementById('closeResult').onclick = ()=>{ modalRoot.innerHTML=''; };
+  document.getElementById('shareResult').onclick = ()=>{ shareResultImage(scored); };
 
   refresh();
+}
+
+/* ---------- 결과 이미지 생성 & 공유 (음원/외부 라이브러리 없이 캔버스로 직접 그림) ---------- */
+function generateResultCanvas(scored){
+  const W = 720, H = 960;
+  const c = document.createElement('canvas');
+  c.width = W; c.height = H;
+  const rc = c.getContext('2d');
+
+  // 배경
+  rc.fillStyle = '#0f1115';
+  rc.fillRect(0,0,W,H);
+  const grad = rc.createRadialGradient(W/2,220,40,W/2,220,520);
+  grad.addColorStop(0,'#1a1d24');
+  grad.addColorStop(1,'#0a0b0d');
+  rc.fillStyle = grad;
+  rc.fillRect(0,0,W,H);
+
+  // 상단 배지 (금고+시계 느낌의 심볼 - 아이콘 디자인과 통일)
+  rc.save();
+  rc.translate(W/2, 150);
+  rc.strokeStyle = '#3b5bdb';
+  rc.lineWidth = 4;
+  rc.beginPath(); rc.arc(0,0,80,0,Math.PI*2); rc.stroke();
+  rc.strokeStyle = '#4dabf7';
+  rc.lineWidth = 6; rc.lineCap='round';
+  rc.beginPath(); rc.moveTo(0,0); rc.lineTo(-30,20); rc.stroke();
+  rc.beginPath(); rc.moveTo(0,0); rc.lineTo(40,-30); rc.stroke();
+  rc.fillStyle = '#ffd43b';
+  rc.beginPath(); rc.arc(0,0,9,0,Math.PI*2); rc.fill();
+  rc.restore();
+
+  // 타이틀
+  rc.fillStyle = '#ffffff';
+  rc.font = 'bold 40px sans-serif';
+  rc.textAlign = 'center';
+  rc.fillText('Time Heist 24', W/2, 290);
+  rc.fillStyle = '#8a929c';
+  rc.font = '20px sans-serif';
+  rc.fillText('게임 결과', W/2, 325);
+
+  // 순위 리스트
+  let y = 400;
+  scored.forEach((s,i)=>{
+    const rankColor = i===0 ? '#ffd43b' : '#dfe6ee';
+    rc.textAlign = 'left';
+    rc.fillStyle = rankColor;
+    rc.font = 'bold 28px sans-serif';
+    rc.fillText(`${i+1}위`, 70, y);
+
+    rc.fillStyle = '#ffffff';
+    rc.font = 'bold 26px sans-serif';
+    rc.fillText(`${s.p.name}`, 160, y);
+
+    rc.textAlign = 'right';
+    rc.fillStyle = '#ffd43b';
+    rc.font = 'bold 26px sans-serif';
+    rc.fillText(`${s.total}점`, W-70, y);
+
+    rc.textAlign = 'left';
+    rc.fillStyle = '#888e97';
+    rc.font = '15px sans-serif';
+    rc.fillText(`보유 ${s.p.time}h · 은행 ${s.p.bankedTime}h · 건물 ${buildingCountOf(s.p.id)}개${s.p.alive?'':' · 탈락'}`, 70, y+26);
+
+    y += 100;
+  });
+
+  rc.textAlign = 'center';
+  rc.fillStyle = '#4a4f58';
+  rc.font = '14px sans-serif';
+  rc.fillText('choehanmin.github.io/time-heist', W/2, H-40);
+
+  return c;
+}
+
+function shareResultImage(scored){
+  const canvasEl = generateResultCanvas(scored);
+  canvasEl.toBlob((blob)=>{
+    if (!blob) return;
+    const fileName = 'time-heist-24-result.png';
+    const file = new File([blob], fileName, { type:'image/png' });
+
+    if (navigator.canShare && navigator.canShare({ files:[file] })){
+      navigator.share({
+        files:[file],
+        title:'Time Heist 24',
+        text:'Time Heist 24 게임 결과',
+      }).catch(()=>{ downloadBlob(blob, fileName); });
+    } else {
+      downloadBlob(blob, fileName);
+    }
+  }, 'image/png');
+}
+
+function downloadBlob(blob, fileName){
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = fileName;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  setTimeout(()=>URL.revokeObjectURL(url), 2000);
 }
 
 /* ============================================================
@@ -1447,6 +1862,8 @@ function showDevModal(){
 function enterGame(){
   document.getElementById('startScreen').style.display = 'none';
   document.getElementById('app').style.display = 'flex';
+  gameEntered = true;
+  startBGM();
   refresh();
   maybeRunAITurn();
 }
