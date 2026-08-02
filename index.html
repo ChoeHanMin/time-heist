@@ -1337,10 +1337,27 @@ if (!hasSavedGame()){
   document.getElementById('continueBtn').disabled = true;
 }
 
-/* ---------- 서비스워커 등록 (오프라인 캐싱) ---------- */
+/* ---------- 서비스워커 등록 (오프라인 캐싱 + 자동 업데이트) ---------- */
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
-    navigator.serviceWorker.register('./sw.js').catch((err) => {
+    // 이미 활성화된 서비스워커가 있었는지 (= 이번이 업데이트인지) 미리 체크
+    const isUpdate = !!navigator.serviceWorker.controller;
+
+    navigator.serviceWorker.register('./sw.js').then((reg) => {
+      reg.update();
+
+      if (isUpdate){
+        reg.addEventListener('updatefound', () => {
+          const newWorker = reg.installing;
+          if (!newWorker) return;
+          newWorker.addEventListener('statechange', () => {
+            if (newWorker.state === 'activated') {
+              window.location.reload();
+            }
+          });
+        });
+      }
+    }).catch((err) => {
       console.warn('서비스워커 등록 실패:', err);
     });
   });
