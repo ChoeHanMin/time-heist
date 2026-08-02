@@ -30,7 +30,11 @@
   .header { display:flex; align-items:center; justify-content:space-between; margin-bottom:8px; }
   .header h1 { font-size:16px; margin:0; }
   .round-pill { font-size:12px; background:#22262d; padding:4px 10px; border-radius:20px; color:#ffd43b; font-weight:700; }
-  .help-btn { background:#22262d; border:none; color:#fff; width:30px; height:30px; border-radius:50%; font-size:14px; }
+  .round-progress { height:4px; background:#22262d; border-radius:3px; overflow:hidden; margin-bottom:8px; }
+  .round-progress-fill { height:100%; width:8.33%; background:linear-gradient(90deg,#3b5bdb,#ffd43b); transition: width 0.5s ease; }
+  body.light-theme .round-progress { background:#e2e5e9; }
+  .help-btn { background:#22262d; border:none; color:#fff; width:30px; height:30px; border-radius:50%; font-size:14px; box-shadow:0 2px 0 rgba(0,0,0,0.25); transition: transform 0.08s ease; }
+  .help-btn:active { transform: scale(0.92); }
   .help-btn.muted { opacity:0.4; }
 
   /* ---------- 플레이어 상태 스트립 (가로) ---------- */
@@ -52,26 +56,30 @@
   canvas { width:100%; max-width:410px; aspect-ratio:1/1; background:#1a1d22; border-radius:10px; touch-action: manipulation; }
 
   /* ---------- 액션 바 ---------- */
-  .action-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:6px; margin-bottom:8px; }
+  .action-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:7px; margin-bottom:8px; }
   .skip-banner { background:#2a1414; border:1px solid #c92a2a; border-radius:10px; padding:12px; margin-bottom:8px; text-align:center; }
   .skip-banner-text { font-size:12.5px; color:#ff8787; margin-bottom:8px; }
   body.light-theme .skip-banner { background:#fff0f0; }
   body.light-theme .skip-banner-text { color:#c92a2a; }
   .act-btn {
-    background:#22262d; border:none; color:#fff; border-radius:8px;
-    padding:10px 2px; font-size:10.5px; display:flex; flex-direction:column; align-items:center; gap:2px;
+    background:#22262d; border:none; color:#fff; border-radius:10px;
+    padding:11px 2px; font-size:10.5px; display:flex; flex-direction:column; align-items:center; gap:3px;
+    box-shadow:0 2px 0 rgba(0,0,0,0.25), 0 1px 3px rgba(0,0,0,0.3);
+    transition: transform 0.08s ease, box-shadow 0.08s ease, opacity 0.15s ease;
   }
+  .act-btn:active:not(:disabled) { transform: translateY(1px) scale(0.97); box-shadow:0 0 0 rgba(0,0,0,0); }
   .act-btn .ic { font-size:17px; }
-  .act-btn:disabled { opacity:0.3; }
-  .act-btn.primary { background:#3b5bdb; }
-  .act-btn.danger { background:#c92a2a; }
-  .act-btn.end { background:#2f9e44; grid-column: span 4; flex-direction:row; justify-content:center; padding:11px; font-size:13px; font-weight:700; }
+  .act-btn:disabled { opacity:0.28; box-shadow:none; }
+  .act-btn.primary { background:linear-gradient(180deg,#4c6ef5,#3b5bdb); }
+  .act-btn.danger { background:linear-gradient(180deg,#e8590c,#c92a2a); }
+  .act-btn.end { background:linear-gradient(180deg,#40c057,#2f9e44); grid-column: span 4; flex-direction:row; justify-content:center; padding:12px; font-size:13.5px; font-weight:700; letter-spacing:0.3px; }
 
   /* ---------- 카드 손패 (가로 스크롤) ---------- */
   .hand-wrap { margin-bottom:8px; }
   .hand-label { font-size:10.5px; color:#888; margin-bottom:4px; }
   .hand-scroll { display:flex; gap:6px; overflow-x:auto; padding-bottom:2px; }
-  .hc { flex:0 0 auto; width:118px; background:#1c1f24; border:1px solid #2f333a; border-radius:8px; padding:7px 8px; font-size:10.5px; }
+  .hc { flex:0 0 auto; width:118px; background:#1c1f24; border:1px solid #2f333a; border-radius:8px; padding:7px 8px; font-size:10.5px; transition: transform 0.1s ease, border-color 0.15s ease; }
+  .hc:not(.disabled):active { transform: scale(0.95); border-color:#4c6ef5; }
   .hc b { color:#ffd43b; display:block; font-size:11px; margin-bottom:2px; }
   .hc.disabled { opacity:0.4; }
   .empty-hint { color:#555; font-size:10.5px; }
@@ -156,14 +164,17 @@
   #startScreen img.start-icon { width:120px; height:120px; margin-bottom:18px; filter: drop-shadow(0 0 24px rgba(255,212,59,0.25)); }
   #startScreen h1 { font-size:26px; margin:0 0 4px; color:#fff; }
   #startScreen .start-sub { color:#8a929c; font-size:13px; margin-bottom:36px; }
-  .start-menu { width:100%; max-width:300px; display:flex; flex-direction:column; gap:12px; }
+  .start-menu { width:100%; max-width:300px; display:flex; flex-direction:column; gap:11px; }
   .start-btn {
-    width:100%; padding:15px; border:none; border-radius:10px;
+    width:100%; padding:15px; border:none; border-radius:12px;
     font-size:15px; font-weight:700; cursor:pointer; color:#fff;
     background:#22262d;
+    box-shadow:0 2px 0 rgba(0,0,0,0.25), 0 1px 4px rgba(0,0,0,0.3);
+    transition: transform 0.08s ease, box-shadow 0.08s ease;
   }
-  .start-btn.primary { background:#3b5bdb; }
-  .start-btn:disabled { opacity:0.35; }
+  .start-btn:active:not(:disabled) { transform: translateY(1px) scale(0.98); box-shadow:none; }
+  .start-btn.primary { background:linear-gradient(180deg,#4c6ef5,#3b5bdb); }
+  .start-btn:disabled { opacity:0.35; box-shadow:none; }
   .start-btn .sub { display:block; font-size:10.5px; font-weight:400; color:#9aa0a8; margin-top:2px; }
 
   .dev-modal { text-align:left; }
@@ -193,6 +204,34 @@
     animation: sparkleAnim 0.5s ease-out forwards;
   }
 
+  /* ---------- 이벤트/역전 토스트 ---------- */
+  @keyframes toastIn { from{ opacity:0; transform:translate(-50%,-10px); } to{ opacity:1; transform:translate(-50%,0); } }
+  .event-toast, .rank-toast {
+    position:fixed; top:70px; left:50%; z-index:95;
+    background:#1c1f24; border:1px solid #ffd43b; border-radius:10px;
+    padding:10px 16px; font-size:12.5px; color:#fff; text-align:center;
+    box-shadow:0 4px 20px rgba(0,0,0,0.5);
+    animation: toastIn 0.25s ease-out;
+    transition: opacity 0.5s ease, top 0.25s ease;
+    max-width:80vw;
+    transform: translateX(-50%);
+  }
+  .event-toast b { color:#ffd43b; }
+  .rank-toast { border-color:#4dabf7; }
+  .rank-toast b { color:#4dabf7; }
+  .fade-out { opacity:0; }
+
+  /* ---------- 막판 긴장 연출 (마지막 2라운드) ---------- */
+  @keyframes tensionPulse {
+    0%,100% { box-shadow: inset 0 0 0 0 rgba(201,42,42,0); }
+    50% { box-shadow: inset 0 0 40px 4px rgba(201,42,42,0.45); }
+  }
+  #app.tension { animation: tensionPulse 1.6s ease-in-out infinite; }
+
+  /* ---------- 턴 타이머 ---------- */
+  .turn-timer { font-size:11px; color:#ffd43b; text-align:center; margin-bottom:4px; }
+  .turn-timer.urgent { color:#ff6b6b; font-weight:700; }
+
   /* ---------- 라이트 테마 ---------- */
   body.light-theme { background:#f2f3f5; color:#1a1d24; }
   body.light-theme .card { background:#fff; color:#1a1d24; box-shadow:0 1px 4px rgba(0,0,0,0.08); }
@@ -220,16 +259,42 @@
 
   /* ---------- 난이도 선택 (시작화면) ---------- */
   .difficulty-row { display:flex; gap:6px; width:100%; max-width:300px; margin-bottom:14px; }
-  .diff-btn { flex:1; padding:9px 4px; border:none; border-radius:8px; font-size:11.5px; background:#22262d; color:#8a929c; }
+  .diff-btn { flex:1; padding:9px 4px; border:none; border-radius:9px; font-size:11.5px; background:#22262d; color:#8a929c; transition: background 0.15s ease, color 0.15s ease; }
   .diff-btn.selected { background:#3b5bdb; color:#fff; font-weight:700; }
   body.light-theme .diff-btn { background:#e9ebee; color:#888; }
   body.light-theme .diff-btn.selected { background:#3b5bdb; color:#fff; }
+
+  /* ---------- 텍스트 크기 ---------- */
+  body.text-large #app { zoom:1.15; }
+  body.text-small #app { zoom:0.88; }
+
+  /* ---------- 고대비 모드 ---------- */
+  body.high-contrast .card, body.high-contrast .p-chip { border:1px solid rgba(255,255,255,0.5); }
+  body.high-contrast #board { filter: contrast(1.25) saturate(1.35); }
+  body.high-contrast .act-btn { border:1px solid rgba(255,255,255,0.45); }
+  body.high-contrast .p-chip.active { border-color:#ffd43b; border-width:2px; }
+
+  /* ---------- 설정/리더보드/업적/도감 공용 ---------- */
+  .settings-row { display:flex; align-items:center; justify-content:space-between; gap:10px; margin-bottom:14px; }
+  .settings-row label { font-size:12.5px; color:#ccc; }
+  .settings-row input[type=range] { flex:1; max-width:150px; }
+  .settings-subrow { display:flex; gap:6px; }
+  .settings-subrow button { flex:1; padding:7px; font-size:11.5px; border:none; border-radius:6px; background:#2a2e35; color:#999; }
+  .settings-subrow button.selected { background:#3b5bdb; color:#fff; }
+  .almanac-item { display:flex; gap:10px; align-items:flex-start; padding:8px 0; border-bottom:1px solid #2a2e35; }
+  .almanac-item .ic { width:28px; height:28px; flex-shrink:0; font-size:20px; text-align:center; }
+  .almanac-item b { display:block; font-size:12.5px; color:#ffd43b; }
+  .almanac-item span { font-size:11.5px; color:#aaa; }
+  .achievement-item { display:flex; justify-content:space-between; padding:8px 0; border-bottom:1px solid #2a2e35; font-size:12.5px; }
+  .achievement-item.locked { opacity:0.4; }
+  .leaderboard-row { display:flex; justify-content:space-between; padding:6px 0; border-bottom:1px solid #2a2e35; font-size:12px; }
 </style>
 </head>
 <body>
 
 <div id="startScreen">
   <button class="help-btn" id="themeBtn" style="position:absolute; top:16px; right:16px;">T</button>
+  <button class="help-btn" id="settingsBtn" style="position:absolute; top:16px; left:16px;">⚙</button>
   <img class="start-icon" src="./icon-512.png" alt="Time Heist 24">
   <h1>Time Heist 24</h1>
   <div class="start-sub">시간을 훔치고, 시간을 지켜라</div>
@@ -244,7 +309,14 @@
     <button class="start-btn primary" id="newGameBtn">새 게임하기</button>
     <button class="start-btn" id="continueBtn">이어하기</button>
     <button class="start-btn" id="nameBtn">이름 입력하기</button>
-    <button class="start-btn" id="devBtn">개발자</button>
+    <div class="settings-subrow">
+      <button class="start-btn" id="leaderboardBtn" style="margin-top:0;">리더보드</button>
+      <button class="start-btn" id="achievementsBtn" style="margin-top:0;">업적</button>
+    </div>
+    <div class="settings-subrow">
+      <button class="start-btn" id="almanacBtn" style="margin-top:0;">도감</button>
+      <button class="start-btn" id="devBtn" style="margin-top:0;">개발자</button>
+    </div>
   </div>
 </div>
 
@@ -259,11 +331,15 @@
     </div>
   </div>
 
+  <div class="round-progress"><div class="round-progress-fill" id="roundProgressFill"></div></div>
+
   <div class="player-strip" id="playerStrip"></div>
 
   <div class="board-wrap">
     <canvas id="board" width="350" height="350"></canvas>
   </div>
+
+  <div class="turn-timer" id="turnTimer"></div>
 
   <div class="action-grid" id="actionGrid">
     <button class="act-btn danger" id="attackBtn"><span class="ic">⚔️</span>공격</button>
@@ -299,6 +375,8 @@
 let audioCtx = null;
 let soundEnabled = true;
 try { soundEnabled = localStorage.getItem('time24_sound') !== '0'; } catch(e){}
+let sfxVolume = 1.0; // 0~1
+try { sfxVolume = parseFloat(localStorage.getItem('time24_sfx_volume')) || 1.0; } catch(e){}
 
 function getAudioCtx(){
   if (!audioCtx){
@@ -311,7 +389,7 @@ function getAudioCtx(){
 }
 
 function playTone(freq, duration, type, startGain, endFreq){
-  if (!soundEnabled) return;
+  if (!soundEnabled || sfxVolume<=0) return;
   const ac = getAudioCtx();
   if (!ac) return;
   const osc = ac.createOscillator();
@@ -319,7 +397,7 @@ function playTone(freq, duration, type, startGain, endFreq){
   osc.type = type || 'sine';
   osc.frequency.setValueAtTime(freq, ac.currentTime);
   if (endFreq) osc.frequency.exponentialRampToValueAtTime(endFreq, ac.currentTime + duration);
-  gain.gain.setValueAtTime(startGain || 0.16, ac.currentTime);
+  gain.gain.setValueAtTime((startGain || 0.16) * sfxVolume, ac.currentTime);
   gain.gain.exponentialRampToValueAtTime(0.001, ac.currentTime + duration);
   osc.connect(gain); gain.connect(ac.destination);
   osc.start();
@@ -333,7 +411,7 @@ function playTap(){
 
 // 캐릭터 이동 — "스윽" 화이트노이즈 스윕
 function playSlide(){
-  if (!soundEnabled) return;
+  if (!soundEnabled || sfxVolume<=0) return;
   const ac = getAudioCtx();
   if (!ac) return;
   const duration = 0.16;
@@ -351,7 +429,7 @@ function playSlide(){
   filter.frequency.setValueAtTime(2200, ac.currentTime);
   filter.frequency.exponentialRampToValueAtTime(500, ac.currentTime + duration);
   const gain = ac.createGain();
-  gain.gain.setValueAtTime(0.2, ac.currentTime);
+  gain.gain.setValueAtTime(0.2 * sfxVolume, ac.currentTime);
   gain.gain.exponentialRampToValueAtTime(0.001, ac.currentTime + duration);
   noise.connect(filter); filter.connect(gain); gain.connect(ac.destination);
   noise.start();
@@ -376,6 +454,8 @@ function playCard(){
 // ---------- 배경음악 (신나는 아르페지오 루프, 음원 파일 없음) ----------
 let bgmEnabled = true;
 try { bgmEnabled = localStorage.getItem('time24_bgm') !== '0'; } catch(e){}
+let bgmVolume = 0.5; // 0~1
+try { bgmVolume = parseFloat(localStorage.getItem('time24_bgm_volume')) || 0.5; } catch(e){}
 
 let bgmIntervalId = null;
 let bgmMasterGain = null;
@@ -449,7 +529,7 @@ function startBGM(){
   const ac = getAudioCtx();
   if (!ac) return;
   bgmMasterGain = ac.createGain();
-  bgmMasterGain.gain.value = 0.5;
+  bgmMasterGain.gain.value = bgmVolume;
   bgmMasterGain.connect(ac.destination);
   bgmStep = 0;
   playBgmStep();
@@ -467,9 +547,52 @@ document.addEventListener('click', (e)=>{
 }, true);
 
 // ---------- 진동 (지원 기기에서만) ----------
+let vibrationEnabled = true;
+try { vibrationEnabled = localStorage.getItem('time24_vibration') !== '0'; } catch(e){}
 function vibrate(pattern){
+  if (!vibrationEnabled) return;
   try { if (navigator.vibrate) navigator.vibrate(pattern); } catch(e){}
 }
+
+// ---------- 접근성 / 언어 ----------
+let textSize = 'normal'; // 'small' | 'normal' | 'large'
+try { textSize = localStorage.getItem('time24_textsize') || 'normal'; } catch(e){}
+let highContrast = false;
+try { highContrast = localStorage.getItem('time24_contrast') === '1'; } catch(e){}
+let LANG = 'ko'; // 'ko' | 'en'
+try { LANG = localStorage.getItem('time24_lang') || 'ko'; } catch(e){}
+
+const I18N = {
+  ko: {
+    newGame:'새 게임하기', continueGame:'이어하기', enterName:'이름 입력하기', developer:'개발자',
+    settings:'설정', leaderboard:'리더보드', achievements:'업적', almanac:'도감',
+    easy:'쉬움', normal:'보통', hard:'어려움',
+    attack:'공격', occupy:'점령', deposit:'예치', rest:'휴식', endTurn:'턴 종료 ▶',
+    myCards:'내 카드 (최대 3장 · 턴당 1장 사용)', gameLog:'게임 로그',
+    skipBannerText:'탈락했습니다 — 나머지 AI들이 자동으로 게임을 진행 중입니다.', skipGame:'게임 스킵하기',
+    settingsTitle:'설정', sfxVolume:'효과음 볼륨', bgmVolume:'배경음악 볼륨', vibration:'진동',
+    textSize:'글자 크기', small:'작게', large:'크게', contrast:'고대비 모드', language:'언어', close:'닫기',
+    leaderboardTitle:'리더보드', achievementsTitle:'업적', almanacTitle:'도감',
+    noRecords:'아직 기록이 없어요. 게임을 플레이해보세요!',
+    bestScore:'최고 점수', totalWins:'총 승리', recentGames:'최근 게임',
+    cardsSection:'카드', terrainSection:'지형',
+  },
+  en: {
+    newGame:'New Game', continueGame:'Continue', enterName:'Enter Name', developer:'Developer',
+    settings:'Settings', leaderboard:'Leaderboard', achievements:'Achievements', almanac:'Almanac',
+    easy:'Easy', normal:'Normal', hard:'Hard',
+    attack:'Attack', occupy:'Occupy', deposit:'Deposit', rest:'Rest', endTurn:'End Turn ▶',
+    myCards:'My Cards (max 3, 1 use/turn)', gameLog:'Game Log',
+    skipBannerText:'You were eliminated — the AI are finishing the game automatically.', skipGame:'Skip Game',
+    settingsTitle:'Settings', sfxVolume:'SFX Volume', bgmVolume:'Music Volume', vibration:'Vibration',
+    textSize:'Text Size', small:'Small', large:'Large', contrast:'High Contrast', language:'Language', close:'Close',
+    leaderboardTitle:'Leaderboard', achievementsTitle:'Achievements', almanacTitle:'Almanac',
+    noRecords:'No records yet. Play a game!',
+    bestScore:'Best Score', totalWins:'Total Wins', recentGames:'Recent Games',
+    cardsSection:'Cards', terrainSection:'Terrain',
+  },
+};
+function t(key){ return (I18N[LANG] && I18N[LANG][key]) || I18N.ko[key] || key; }
 
 // ---------- 화면 흔들림 (피해 시) ----------
 function triggerShake(){
@@ -493,6 +616,20 @@ function spawnSparkleAtCell(col, row){
   el.style.top = y + 'px';
   document.body.appendChild(el);
   setTimeout(()=>el.remove(), 520);
+}
+
+function celebrateWin(){
+  for (let i=0;i<7;i++){
+    setTimeout(()=>{
+      const el = document.createElement('div');
+      el.className = 'sparkle-burst';
+      el.style.left = (window.innerWidth/2 + (Math.random()*180-90)) + 'px';
+      el.style.top = (130 + Math.random()*100) + 'px';
+      document.body.appendChild(el);
+      setTimeout(()=>el.remove(), 520);
+    }, i*110);
+  }
+  playCoin();
 }
 
 
@@ -697,6 +834,9 @@ function finishInteractiveTutorial(){
   playCoin();
   log(`${human.name}: 🎓 튜토리얼 완주 보너스 +10시간! (${human.time}h)`);
   log('이제부터는 자유롭게 플레이하세요! 이번 판은 연습 게임이라 AI들이 약하게 설정되어 있어요.');
+  if (players[currentPlayerIdx] && players[currentPlayerIdx].type==='human' && players[currentPlayerIdx].alive){
+    startTurnTimer();
+  }
   refresh();
 }
 
@@ -806,6 +946,7 @@ const SIZE = 50; // 내부 논리 좌표계 (350/7)
 const CHARGE_RECHARGE_ROUNDS = 3;
 const TOTAL_ROUNDS = 12;
 const GATE_POS = { col:3, row:3 };
+const GOLDEN_ROUND = 9; // 이 라운드 시작 시 황금 카드칸 등장
 
 function cellKey(c,r){ return `${c},${r}`; }
 function manhattan(a,b){ return Math.abs(a.col-b.col)+Math.abs(a.row-b.row); }
@@ -819,6 +960,7 @@ function buildCellStates(){
         chargeUsedRound: -1,
         occupiedBy: null,
         trap: null,
+        golden: false,
       };
     }
   }
@@ -848,8 +990,9 @@ const CARD_DEFS = {
   freeze:        { name:'시간 동결', icon:'🧊', desc:'상대 다음 턴 이동 불가', needsTarget:true },
   rewind:        { name:'되감기',   icon:'⏪', desc:'직전 위치로 복귀, 비용 반환', needsTarget:false },
   shadow:        { name:'그림자 이동', icon:'👤', desc:'이번 턴 공격 대상 제외', needsTarget:false },
+  timeheist:     { name:'타임 하이스트', icon:'⭐', desc:'모든 상대 시간의 20%를 훔칩니다', needsTarget:false },
 };
-const CARD_POOL = Object.keys(CARD_DEFS);
+const CARD_POOL = Object.keys(CARD_DEFS).filter(k=>k!=='timeheist'); // 황금 카드칸 전용 카드는 일반 드로우풀 제외
 function drawRandomCard(){ return CARD_POOL[Math.floor(Math.random()*CARD_POOL.length)]; }
 
 /* ============================================================
@@ -858,6 +1001,14 @@ function drawRandomCard(){ return CARD_POOL[Math.floor(Math.random()*CARD_POOL.l
 const PLAYER_COLORS = ['#4dabf7','#ff6b6b','#69db7c','#ffd43b'];
 const PLAYER_ICONS = ['나','무','은','탐'];
 const START_COORDS = [ {col:0,row:0}, {col:6,row:0}, {col:0,row:6}, {col:6,row:6} ];
+
+const AI_PERSONAS = [
+  { label:'무법자', personality:{aggro:0.85, caution:0.15, hoarding:0.10}, volatile:false },
+  { label:'은행가', personality:{aggro:0.20, caution:0.60, hoarding:0.90}, volatile:false },
+  { label:'탐험가', personality:{aggro:0.40, caution:0.30, hoarding:0.30}, volatile:false },
+  { label:'도박꾼', personality:{aggro:0.50, caution:0.50, hoarding:0.50}, volatile:true },
+];
+const SEAT_LETTERS = ['A','B','C'];
 
 function makePlayer(id, name, type, personality, start){
   return {
@@ -882,16 +1033,28 @@ function makePlayer(id, name, type, personality, start){
     shadowActive: false,
     lastMove: null,
     visited: new Set([cellKey(start.col,start.row)]),
+    dangerHitCount: 0,
+    volatile: false,
+    basePersonality: null,
   };
 }
 
 function createInitialPlayers(){
   const humanDisplayName = userName ? `${userName} 나` : '나';
+
+  // 4종의 AI 성향 중 매판 무작위로 3종을 뽑아 배치 (도박꾼이 포함될 수도, 빠질 수도 있음)
+  const shuffled = [...AI_PERSONAS].sort(()=>Math.random()-0.5).slice(0,3);
+
+  const aiPlayers = shuffled.map((persona, i)=>{
+    const p = makePlayer(i+1, `${SEAT_LETTERS[i]} (${persona.label})`, 'ai', scaledPersonality(persona.personality), START_COORDS[i+1]);
+    p.volatile = persona.volatile;
+    p.basePersonality = { ...p.personality };
+    return p;
+  });
+
   return [
     makePlayer(0, humanDisplayName, 'human', null, START_COORDS[0]),
-    makePlayer(1, 'A (무법자)', 'ai', scaledPersonality({aggro:0.85, caution:0.15, hoarding:0.10}), START_COORDS[1]),
-    makePlayer(2, 'B (은행가)', 'ai', scaledPersonality({aggro:0.20, caution:0.60, hoarding:0.90}), START_COORDS[2]),
-    makePlayer(3, 'C (탐험가)', 'ai', scaledPersonality({aggro:0.40, caution:0.30, hoarding:0.30}), START_COORDS[3]),
+    ...aiPlayers,
   ];
 }
 function applyTutorialHandicap(){
@@ -907,6 +1070,7 @@ function resetCellStates(){
     cellStates[k].occupiedBy = null;
     cellStates[k].trap = null;
     cellStates[k].chargeUsedRound = -1;
+    cellStates[k].golden = false;
   });
 }
 
@@ -918,6 +1082,22 @@ let tutorialMode = false;      // 이번 판이 "최초 게임"이라 AI를 봐�
 let interactiveStepIdx = -1;   // 인터랙티브 가이드 진행 단계 (-1 = 비활성)
 let round = 1;
 let gameOver = false;
+
+// ---------- 재미 요소용 상태 ----------
+let activeEvent = null;        // 현재 라운드에 적용 중인 랜덤 이벤트 ('RAIN'|'BLACKOUT'|'BANK_CLOSED'|null)
+let goldenTileKey = null;      // 황금 카드칸 좌표 키 (없으면 null)
+let goldenTileSpawned = false; // 이번 판에 이미 등장시켰는지
+let lastRankOrder = [];        // 순위 변동 감지용
+let turnTimerInterval = null;
+let turnTimerSeconds = 0;
+const TURN_TIME_LIMIT = 18;    // 사람 턴 제한 시간(초)
+
+const HIDDEN_OBJECTIVES = [
+  { id:'danger3', text:'위험지역 3번 밟기', check:(p)=>p.dangerHitCount>=3 },
+  { id:'twoBuildings', text:'건물 2개 동시에 소유하기', check:(p)=>buildingCountOf(p.id)>=2 },
+  { id:'bank10', text:'은행에 10시간 이상 맡기기', check:(p)=>p.bankedTime>=10 },
+];
+let hiddenObjective = null;
 let uiLocked = false;
 
 /* ============================================================
@@ -1014,6 +1194,24 @@ function drawIcon(tctx, type, cx, cy, size){
       tctx.lineTo(-size*0.08, 0);
       tctx.closePath();
       tctx.fill();
+      break;
+    }
+    case 'GOLDEN': {
+      // 반짝이는 별 (황금 카드칸)
+      const spikes = 5, outerR = size*0.26, innerR = size*0.11;
+      tctx.fillStyle = '#ffd43b';
+      tctx.beginPath();
+      for (let i=0;i<spikes*2;i++){
+        const r = i%2===0 ? outerR : innerR;
+        const ang = (Math.PI/spikes)*i - Math.PI/2;
+        const px = Math.cos(ang)*r, py = Math.sin(ang)*r;
+        if (i===0) tctx.moveTo(px,py); else tctx.lineTo(px,py);
+      }
+      tctx.closePath();
+      tctx.fill();
+      tctx.strokeStyle = '#fff3bf';
+      tctx.lineWidth = 2;
+      tctx.stroke();
       break;
     }
     case 'TIME_GATE': {
@@ -1187,7 +1385,12 @@ function draw(){
         ctx.strokeRect(x+2.5,y+2.5,SIZE-5,SIZE-5);
       }
 
-      if (state.type !== 'NORMAL'){
+      if (state.golden){
+        ctx.strokeStyle = '#ffd43b';
+        ctx.lineWidth = 3;
+        ctx.strokeRect(x+2,y+2,SIZE-4,SIZE-4);
+        drawIcon(ctx, 'GOLDEN', x+SIZE/2, y+SIZE/2-2, SIZE);
+      } else if (state.type !== 'NORMAL'){
         drawIcon(ctx, state.type, x+SIZE/2, y+SIZE/2-2, SIZE);
       }
 
@@ -1270,6 +1473,8 @@ function saveGameState(){
       players: players.map(p=>({...p, visited: Array.from(p.visited)})),
       cellStates,
       currentPlayerIdx, round, gameOver, lastTurnIdx, tutorialMode,
+      activeEvent, goldenTileKey, goldenTileSpawned,
+      hiddenObjectiveId: hiddenObjective ? hiddenObjective.id : null,
     };
     localStorage.setItem(SAVE_KEY, JSON.stringify(data));
   } catch(e){ /* 저장 실패는 조용히 무시 (프라이빗 모드 등) */ }
@@ -1293,6 +1498,11 @@ function loadGameState(){
   lastTurnIdx = data.lastTurnIdx;
   tutorialMode = !!data.tutorialMode;
   interactiveStepIdx = -1; // 저장된 게임을 이어할 때는 인터랙티브 가이드는 재개하지 않음
+  activeEvent = data.activeEvent || null;
+  goldenTileKey = data.goldenTileKey || null;
+  goldenTileSpawned = !!data.goldenTileSpawned;
+  // hiddenObjective은 함수(check)를 포함하므로 id로 저장했다가 원본 객체를 다시 찾아옴
+  hiddenObjective = HIDDEN_OBJECTIVES.find(o=>o.id===data.hiddenObjectiveId) || null;
   return true;
 }
 
@@ -1306,6 +1516,22 @@ function refresh(){
 
   draw();
   document.getElementById('roundLabel').textContent = `R${Math.min(round,TOTAL_ROUNDS)}/${TOTAL_ROUNDS}`;
+  const progressFill = document.getElementById('roundProgressFill');
+  if (progressFill) progressFill.style.width = `${Math.min(100, (round/TOTAL_ROUNDS)*100)}%`;
+
+  // 순위 변동 감지 -> 1위가 바뀌면 토스트로 알림
+  const currentRankOrder = players
+    .map(p=>({ id:p.id, total: p.time + p.bankedTime + buildingCountOf(p.id) }))
+    .sort((a,b)=>b.total-a.total)
+    .map(r=>r.id);
+  if (lastRankOrder.length>0 && !gameOver && currentRankOrder[0] !== lastRankOrder[0]){
+    const newLeader = players[currentRankOrder[0]];
+    showRankToast(`${newLeader.name}이(가) 1위로 올라섰습니다!`);
+  }
+  lastRankOrder = currentRankOrder;
+
+  // 막판 긴장 연출 (마지막 2라운드 동안 화면 테두리가 붉게 맥동)
+  document.getElementById('app').classList.toggle('tension', round >= TOTAL_ROUNDS-1 && !gameOver);
 
   const strip = document.getElementById('playerStrip');
   strip.innerHTML = '';
@@ -1345,7 +1571,7 @@ function refresh(){
       cur.hand.forEach((cardId, idx)=>{
         const def = CARD_DEFS[cardId];
         const div = document.createElement('div');
-        const usable = isHumanTurn && !cur.cardUsedThisTurn;
+        const usable = isHumanTurn && !cur.cardUsedThisTurn && activeEvent!=='BLACKOUT';
         div.className = 'hc' + (usable?'':' disabled');
         div.innerHTML = `<b>${def.icon} ${def.name}</b>${def.desc}`;
         if (usable) div.onclick = () => useCard(cur, idx);
@@ -1368,16 +1594,17 @@ function onEnterCell(player, state, col, row){
   switch(state.type){
     case 'DANGER': {
       const dmg = applyDamage(player, 1);
+      player.dangerHitCount = (player.dangerHitCount||0) + 1;
       log(`${player.name}: 💀 위험지역, -${dmg}시간 (${player.time}h)`);
       break;
     }
     case 'CHARGE': {
       const ready = state.chargeUsedRound<0 || (round-state.chargeUsedRound)>=CHARGE_RECHARGE_ROUNDS;
       if (ready){
-        player.time += 2;
+        const gained = gainTime(player, 2);
         state.chargeUsedRound = round;
         playCoin();
-        log(`${player.name}: ⚡ 충전, +2시간 (${player.time}h)`);
+        log(`${player.name}: ⚡ 충전, +${gained}시간 (${player.time}h)`);
       } else {
         log(`${player.name}: ⚡ 충전소 재활성화 대기 중`);
       }
@@ -1397,11 +1624,11 @@ function onEnterCell(player, state, col, row){
     }
     case 'TIME_GATE': {
       if (player.escapeMode){
-        player.time += 6;
+        const gained = gainTime(player, 6);
         player.escapeMode = false;
         player.escapeUsed = true;
         playCoin();
-        log(`${player.name}: 🌀 탈출 성공! +6시간 (${player.time}h)`);
+        log(`${player.name}: 🌀 탈출 성공! +${gained}시간 (${player.time}h)`);
       }
       break;
     }
@@ -1414,15 +1641,38 @@ function onEnterCell(player, state, col, row){
     default: break;
   }
 
+  // 황금 카드칸: 먼저 도착한 사람이 특수 카드 획득 (칸 타입과 무관하게 golden 플래그로 판정)
+  if (state.golden){
+    state.golden = false;
+    if (player.hand.length < 3){
+      player.hand.push('timeheist');
+      playCoin();
+      spawnSparkleAtCell(col, row);
+      log(`${player.name}: ⭐ 황금 카드칸 획득! 타임 하이스트 카드를 얻었습니다.`);
+      if (player.type==='human'){
+        const s = loadStats();
+        s.goldenPickups = (s.goldenPickups||0) + 1;
+        saveStats(s);
+      }
+    } else {
+      log(`${player.name}: ⭐ 황금 카드칸에 도착했지만 손패가 가득 차 카드를 놓쳤습니다.`);
+    }
+  }
+
   checkEscapeModeEnter(player);
   checkElimination(player);
 }
 
 function revealTrap(player, state){
-  const t = state.trap;
+  const trapType = state.trap;
   state.trap = null;
-  if (t==='trap'){ applyDamage(player,2); log(`${player.name}: 💥 함정 발동! -2시간 (${player.time}h)`); }
-  else if (t==='reward'){ player.time += 2; playCoin(); log(`${player.name}: 🎁 보상 발견, +2시간 (${player.time}h)`); }
+  if (player.type==='human'){
+    const s = loadStats();
+    s.trapEncounters = (s.trapEncounters||0) + 1;
+    saveStats(s);
+  }
+  if (trapType==='trap'){ applyDamage(player,2); log(`${player.name}: 💥 함정 발동! -2시간 (${player.time}h)`); }
+  else if (trapType==='reward'){ const gained = gainTime(player,2); playCoin(); log(`${player.name}: 🎁 보상 발견, +${gained}시간 (${player.time}h)`); }
   else { log(`${player.name}: 🕳️ 빈 함정이었음`); }
 }
 
@@ -1443,6 +1693,14 @@ function applyDamage(player, amount){
     }
   }
   return dmg;
+}
+
+// 시간 '획득'을 이 함수로 통일 — 마지막 라운드에는 2배로 지급해서 막판 대역전 기회를 만듦
+function gainTime(player, amount){
+  const mult = (round === TOTAL_ROUNDS) ? 2 : 1;
+  const gained = amount * mult;
+  player.time += gained;
+  return gained;
 }
 
 function checkEscapeModeEnter(player){
@@ -1483,6 +1741,7 @@ function tryMove(col, row){
   const freeLimit = freeMovesAllowed(player);
   const isPaidMove = player.movesThisTurn >= freeLimit;
   let cost = isPaidMove ? 1 : 0;
+  if (isPaidMove && activeEvent === 'RAIN') cost = 2; // 폭우: 추가 이동 비용 2배
   if (isPaidMove && player.freeExtraMove) cost = 0;
 
   if (cost>0 && player.time<cost){ log(`${player.name}: 시간 부족 — 추가 이동 불가`); return; }
@@ -1493,7 +1752,7 @@ function tryMove(col, row){
   player.movesThisTurn += 1;
   playSlide();
 
-  if (cost>0) log(`${player.name}: 추가 이동, -1시간 (${player.time}h)`);
+  if (cost>0) log(`${player.name}: 추가 이동, -${cost}시간 (${player.time}h)`);
   else log(`${player.name}: 이동`);
 
   const state = cellStates[cellKey(col,row)];
@@ -1569,13 +1828,23 @@ function resolveCombat(attacker, defender, atkChoice, defChoice){
   // 튜토리얼(첫 게임) 동안에는 사람이 공격자일 때 항상 승리하도록 배려
   const forceAttackerWin = tutorialMode && attacker.type === 'human';
 
+  // 현상금 판정: 공격 시작 시점에 방어자가 압도적 선두였는지
+  const aliveAtStart = alivePlayers();
+  const sortedAtStart = [...aliveAtStart].sort((a,b)=>b.time-a.time);
+  const isBountyTarget = sortedAtStart.length>1 && defender === sortedAtStart[0]
+    && (sortedAtStart[0].time - sortedAtStart[1].time) >= 4;
+
   if (!forceAttackerWin && atkChoice === defChoice){
     applyDamage(attacker,1); applyDamage(defender,1);
     log(`무승부 — 양쪽 -1시간`);
   } else if (forceAttackerWin || beats(atkChoice, defChoice)){
     applyDamage(defender,3);
-    attacker.time += 1;
-    log(`공격자 승리 — 방어자 -3h / 공격자 +1h`);
+    const gained = gainTime(attacker, 1);
+    if (isBountyTarget){
+      const bonus = gainTime(attacker, 2);
+      log(`💰 현상금 획득! 선두를 공격해 추가로 +${bonus}시간`);
+    }
+    log(`공격자 승리 — 방어자 -3h / 공격자 +${gained}h`);
   } else {
     applyDamage(attacker,2);
     log(`방어자 승리 — 공격자 -2h`);
@@ -1593,6 +1862,7 @@ function resolveCombat(attacker, defender, atkChoice, defChoice){
    ============================================================ */
 function useCard(player, idx){
   if (player.cardUsedThisTurn || uiLocked) return;
+  if (activeEvent === 'BLACKOUT'){ log(`${player.name}: 정전으로 이번 라운드는 카드를 쓸 수 없어요.`); return; }
   const cardId = player.hand[idx];
   const def = CARD_DEFS[cardId];
 
@@ -1657,6 +1927,22 @@ function applyCardEffect(player, cardId, target){
       player.shadowActive = true;
       log(`${player.name}: 👤 그림자 이동 — 이번 턴 공격 대상 제외`);
       break;
+    case 'timeheist': {
+      let totalStolen = 0;
+      players.forEach(o=>{
+        if (o.id===player.id || !o.alive) return;
+        const stolen = Math.floor(o.time * 0.2);
+        if (stolen>0){
+          o.time -= stolen;
+          totalStolen += stolen;
+          checkElimination(o);
+        }
+      });
+      player.time += totalStolen;
+      playCoin();
+      log(`${player.name}: ⭐ 타임 하이스트! 상대들의 시간 20%를 훔쳐 +${totalStolen}시간 (${player.time}h)`);
+      break;
+    }
   }
 }
 
@@ -1684,20 +1970,27 @@ document.getElementById('occupyBtn').addEventListener('click', ()=>{
   player.time -= cost;
   const wasEnemyOwned = state.occupiedBy!==null;
   state.occupiedBy = player.id;
-  state.trap = ['trap','empty','reward'][Math.floor(Math.random()*3)];
   player.actionUsedThisTurn = true;
   spawnSparkleAtCell(player.col, player.row);
-
   log(`${player.name}: 🏢 건물 점령${wasEnemyOwned?' (탈환)':''}, -${cost}시간`);
-  if (player.hand.length<3){
-    const c = drawRandomCard();
-    player.hand.push(c);
-    playCard();
-    log(`${player.name}: 점령 보상 카드 — ${CARD_DEFS[c].name}`);
-  }
-  checkElimination(player);
-  refresh();
-  if (interactiveStepIdx === 2) advanceInteractiveStep();
+
+  const finishOccupy = () => {
+    if (player.hand.length<3){
+      const c = drawRandomCard();
+      player.hand.push(c);
+      playCard();
+      log(`${player.name}: 점령 보상 카드 — ${CARD_DEFS[c].name}`);
+    }
+    checkElimination(player);
+    refresh();
+    if (interactiveStepIdx === 2) advanceInteractiveStep();
+  };
+
+  // 사람은 이 건물에 숨길 함정 종류를 직접 고를 수 있음 (심리전 요소)
+  showTrapChoiceModal((trapType)=>{
+    state.trap = trapType;
+    finishOccupy();
+  });
 });
 
 document.getElementById('bankBtn').addEventListener('click', ()=>{
@@ -1707,9 +2000,14 @@ document.getElementById('bankBtn').addEventListener('click', ()=>{
   showAmountModal(player.time, (amount)=>{
     if (amount<=0 || amount>player.time) return;
     player.time -= amount;
-    player.bankedTime += amount;
+    let credited = amount;
+    if (activeEvent === 'BANK_CLOSED'){
+      credited = Math.floor(amount/2);
+      log(`${player.name}: 🏦 은행 폐쇄 중이라 예치 가치가 절반이 됩니다.`);
+    }
+    player.bankedTime += credited;
     player.actionUsedThisTurn = true;
-    log(`${player.name}: 🏦 ${amount}시간 예치 (보유 ${player.time}h/은행 ${player.bankedTime}h)`);
+    log(`${player.name}: 🏦 ${amount}시간 예치 → ${credited}시간 저장 (보유 ${player.time}h/은행 ${player.bankedTime}h)`);
     checkEscapeModeEnter(player);
     checkElimination(player);
     refresh();
@@ -1720,10 +2018,10 @@ document.getElementById('bankBtn').addEventListener('click', ()=>{
 document.getElementById('restBtn').addEventListener('click', ()=>{
   const player = players[currentPlayerIdx];
   if (player.actionUsedThisTurn) return;
-  player.time += 2;
+  const gained = gainTime(player, 2);
   player.actionUsedThisTurn = true;
   playCoin();
-  log(`${player.name}: 💤 휴식 — +2시간 (${player.time}h)`);
+  log(`${player.name}: 💤 휴식 — +${gained}시간 (${player.time}h)`);
   refresh();
 });
 
@@ -1796,6 +2094,25 @@ function showAmountModal(max, onConfirm){
   document.getElementById('amountCancel').onclick = ()=>{ modalRoot.innerHTML=''; uiLocked=false; };
 }
 
+function showTrapChoiceModal(onChoose){
+  uiLocked = true;
+  modalRoot.innerHTML = `
+    <div class="overlay">
+      <div class="modal">
+        <h3>이 건물에 무엇을 숨길까요?</h3>
+        <div style="font-size:12px; color:#888; margin-bottom:10px;">상대가 들어올 때 공개됩니다. 무엇을 골랐는지는 아무도 모릅니다.</div>
+        <div class="choices">
+          <button data-t="trap">💥<br>함정</button>
+          <button data-t="empty">🕳️<br>빈 칸</button>
+          <button data-t="reward">🎁<br>보상</button>
+        </div>
+      </div>
+    </div>`;
+  modalRoot.querySelectorAll('button').forEach(btn=>{
+    btn.onclick = ()=>{ modalRoot.innerHTML=''; uiLocked=false; onChoose(btn.dataset.t); };
+  });
+}
+
 /* ============================================================
    12. 턴 진행
    ============================================================ */
@@ -1833,12 +2150,145 @@ function nextTurn(){
   if (next <= lastTurnIdx){
     round += 1;
     if (round > TOTAL_ROUNDS){ endGame(); return; }
+    onRoundStart();
   }
   lastTurnIdx = next;
   currentPlayerIdx = next;
 
+  if (players[next].type==='human' && players[next].alive){
+    startTurnTimer();
+  } else {
+    stopTurnTimer();
+  }
+
   refresh();
   maybeRunAITurn();
+}
+
+function onRoundStart(){
+  // 이전 라운드 이벤트는 새 라운드가 시작되면 해제
+  activeEvent = null;
+
+  // 3라운드마다 랜덤 이벤트 발생
+  if (round % 3 === 0){
+    const events = ['RAIN','BLACKOUT','BANK_CLOSED','TIME_STORM'];
+    const picked = events[Math.floor(Math.random()*events.length)];
+    triggerRandomEvent(picked);
+  }
+
+  // 지정 라운드에 황금 카드칸 등장 (맵 중앙 근처 일반 칸 하나를 선택)
+  if (round === GOLDEN_ROUND && !goldenTileSpawned){
+    spawnGoldenTile();
+  }
+}
+
+function triggerRandomEvent(eventType){
+  if (eventType === 'TIME_STORM'){
+    players.forEach(p=>{
+      if (!p.alive) return;
+      p.col = Math.floor(Math.random()*7);
+      p.row = Math.floor(Math.random()*7);
+    });
+    showEventToast('시간 폭풍!', '모든 플레이어가 무작위 위치로 이동했습니다.');
+    log('🌪️ 시간 폭풍 발생 — 모든 플레이어 위치 무작위 이동');
+    refresh();
+    return;
+  }
+
+  activeEvent = eventType;
+  const info = {
+    RAIN: ['폭우', '이번 라운드 추가 이동 비용이 2배로 늘어납니다.'],
+    BLACKOUT: ['정전', '이번 라운드에는 카드를 사용할 수 없습니다.'],
+    BANK_CLOSED: ['은행 폐쇄', '이번 라운드 은행 예치 시 절반만 저장됩니다.'],
+  }[eventType];
+  showEventToast(info[0], info[1]);
+  log(`⚡ 이벤트: ${info[0]} — ${info[1]}`);
+}
+
+let activeToasts = [];
+function repositionToasts(){
+  activeToasts.forEach((el,i)=>{ el.style.top = (70 + i*58) + 'px'; });
+}
+function spawnToast(className, innerHtml, duration){
+  duration = duration || 2400;
+  const el = document.createElement('div');
+  el.className = className;
+  el.innerHTML = innerHtml;
+  document.body.appendChild(el);
+  activeToasts.push(el);
+  repositionToasts();
+  setTimeout(()=>{ el.classList.add('fade-out'); }, duration);
+  setTimeout(()=>{
+    el.remove();
+    activeToasts = activeToasts.filter(x=>x!==el);
+    repositionToasts();
+  }, duration+600);
+}
+
+function showEventToast(title, desc){
+  spawnToast('event-toast', `<b>${title}</b><br>${desc}`);
+}
+
+function spawnGoldenTile(){
+  // 시간문(중앙) 근처의 일반(NORMAL) 칸 중 하나를 골라 황금 카드칸으로 지정
+  const candidates = Object.entries(cellStates)
+    .filter(([k,s])=> s.type==='NORMAL')
+    .map(([k])=>{ const [c,r]=k.split(',').map(Number); return {col:c,row:r}; })
+    .sort((a,b)=> manhattan(a,GATE_POS) - manhattan(b,GATE_POS));
+  if (candidates.length===0) return;
+  const chosen = candidates[Math.floor(Math.random()*Math.min(3,candidates.length))];
+  goldenTileKey = cellKey(chosen.col, chosen.row);
+  cellStates[goldenTileKey].golden = true;
+  goldenTileSpawned = true;
+  showEventToast('황금 카드칸 등장!', '먼저 도착하면 강력한 카드를 얻습니다.');
+  log('⭐ 맵에 황금 카드칸이 등장했습니다!');
+}
+
+/* ---------- 턴 제한 시간 ---------- */
+function startTurnTimer(){
+  stopTurnTimer();
+  if (interactiveStepIdx >= 0) return; // 인터랙티브 가이드 중에는 타이머 비활성
+  turnTimerSeconds = TURN_TIME_LIMIT;
+  updateTurnTimerUI();
+  turnTimerInterval = setInterval(()=>{
+    if (uiLocked) return; // 모달(전투 선택 등) 응답 대기 중에는 카운트다운 일시정지
+    turnTimerSeconds--;
+    updateTurnTimerUI();
+    if (turnTimerSeconds<=0){
+      stopTurnTimer();
+      handleTurnTimeout();
+    }
+  }, 1000);
+}
+function stopTurnTimer(){
+  if (turnTimerInterval){ clearInterval(turnTimerInterval); turnTimerInterval=null; }
+  updateTurnTimerUI();
+}
+function updateTurnTimerUI(){
+  const el = document.getElementById('turnTimer');
+  if (!el) return;
+  if (!turnTimerInterval){ el.textContent = ''; return; }
+  el.textContent = (LANG==='en' ? '⏱ ' : '⏱ ') + turnTimerSeconds + (LANG==='en' ? 's' : '초');
+  el.classList.toggle('urgent', turnTimerSeconds<=5);
+}
+function handleTurnTimeout(){
+  const player = players[currentPlayerIdx];
+  if (!player || player.type!=='human' || !player.alive || gameOver || uiLocked) return;
+  if (!player.actionUsedThisTurn){
+    const gained = gainTime(player, 2);
+    player.actionUsedThisTurn = true;
+    log(`${player.name}: ⏱ 시간 초과 — 자동 휴식 처리 (+${gained}시간)`);
+  } else {
+    log(`${player.name}: ⏱ 시간 초과 — 턴 자동 종료`);
+  }
+  refresh();
+  nextTurn();
+}
+
+/* ---------- 역전 토스트 ---------- */
+function showRankToast(text){
+  const label = LANG==='en' ? 'Rank change!' : '순위 변동!';
+  spawnToast('rank-toast', `<b>${label}</b><br>${text}`, 2200);
 }
 
 function maybeRunAITurn(){
@@ -1870,9 +2320,15 @@ function isChargeReady(cell){
 }
 
 function computeAttackScore(ai, target){
-  const maxTime = Math.max(...alivePlayers().map(p=>p.time));
+  const alive = alivePlayers();
+  const sorted = [...alive].sort((a,b)=>b.time-a.time);
+  const maxTime = sorted.length ? sorted[0].time : 0;
+  const secondTime = sorted.length>1 ? sorted[1].time : maxTime;
+  const isBounty = target.time === maxTime && (maxTime - secondTime) >= 4;
+
   let score = 20 + ai.personality.aggro*30;
   if (target.time === maxTime) score += 15;
+  if (isBounty) score += 20; // 현상금: 압도적 선두는 다들 견제하고 싶어함
   if (target.time <= 6) score += 10;
   if (ai.time <= 8) score -= 25;
   const failRisk = target.type==='ai' ? target.personality.caution : 0.4;
@@ -1900,6 +2356,16 @@ function computeOccupyScore(ai, ownedByEnemy){
 function aiTakeTurn(ai){
   if (gameOver) return;
   if (!ai.alive){ nextTurn(); return; }
+
+  // 도박꾼: 매 턴 성향이 ±0.2 범위에서 흔들려 예측하기 어려움
+  if (ai.volatile && ai.basePersonality){
+    const jitter = ()=> (Math.random()*0.4 - 0.2);
+    ai.personality = {
+      aggro: Math.min(0.95, Math.max(0.05, ai.basePersonality.aggro + jitter())),
+      caution: Math.min(0.95, Math.max(0.05, ai.basePersonality.caution + jitter())),
+      hoarding: Math.min(0.95, Math.max(0.05, ai.basePersonality.hoarding + jitter())),
+    };
+  }
 
   if (ai.escapeMode){
     stepToward(ai, GATE_POS);
@@ -1981,8 +2447,10 @@ function aiTakeTurn(ai){
   } else if (choice.action==='bank'){
     const amount = Math.max(0, ai.time-8);
     if (amount>0){
-      ai.time -= amount; ai.bankedTime += amount;
-      log(`${ai.name}: 🏦 ${amount}시간 예치`);
+      ai.time -= amount;
+      const credited = activeEvent==='BANK_CLOSED' ? Math.floor(amount/2) : amount;
+      ai.bankedTime += credited;
+      log(`${ai.name}: 🏦 ${amount}시간 예치${activeEvent==='BANK_CLOSED' ? ` (은행폐쇄로 ${credited}시간만 저장)` : ''}`);
       checkEscapeModeEnter(ai);
       checkElimination(ai);
     }
@@ -2064,23 +2532,50 @@ function stepToward(ai, target){
 function endGame(){
   gameOver = true;
   stopBGM();
+  stopTurnTimer();
+
+  // 히든 목표 판정 (사람 전용)
+  let objectiveBonusHtml = '';
+  const human = players[0];
+  if (hiddenObjective){
+    const achieved = hiddenObjective.check(human);
+    if (achieved) human.time += 5; // 보너스는 순수 시간으로 지급 (총점 계산에 자연히 반영됨)
+    objectiveBonusHtml = `<div class="final-rank" style="border-top:1px dashed #444; margin-top:8px; padding-top:10px;">
+      <b style="color:${achieved?'#69db7c':'#888'}">히든 목표</b> ${hiddenObjective.text}
+      — ${achieved ? '달성! (+5시간 보너스 반영됨)' : '미달성'}
+    </div>`;
+  }
+
   const scored = players.map(p=>({
     p,
     total: p.time + p.bankedTime + buildingCountOf(p.id)*1,
   })).sort((a,b)=>b.total-a.total);
 
+  const gap = scored.length>1 ? scored[0].total - scored[1].total : 0;
+  let flavor = '멋진 게임이었어요!';
+  if (gap<=3) flavor = '박빙의 승부였어요! 손에 땀을 쥐게 하네요.';
+  else if (gap>=15) flavor = '압도적인 승리! 완벽한 시간 관리였어요.';
+
+  recordGameResult(scored);
+
+  const humanWon = scored[0].p.id === 0;
+
   log('=== 게임 종료 ===');
   let html = `<div class="overlay"><div class="modal">
-    <h3>🏆 게임 종료 — 최종 순위</h3>`;
+    <h3>🏆 게임 종료 — 최종 순위</h3>
+    <div style="font-size:12.5px; color:#ffd43b; margin-bottom:10px;">${flavor}</div>`;
   scored.forEach((s,i)=>{
-    html += `<div class="final-rank"><b>${i+1}위</b> ${s.p.icon} ${s.p.name} — 총 ${s.total}점
+    const winnerStyle = i===0 ? 'background:rgba(255,212,59,0.08); border-radius:8px; padding:6px 8px; margin:0 -8px 4px;' : '';
+    html += `<div class="final-rank" style="${winnerStyle}"><b>${i+1}위</b> ${s.p.icon} ${s.p.name} — 총 ${s.total}점
       <br><span style="color:#888;font-size:11px;">보유 ${s.p.time}h + 은행 ${s.p.bankedTime}h + 건물 ${buildingCountOf(s.p.id)}개${s.p.alive?'':' (탈락)'}</span></div>`;
     log(`${i+1}위: ${s.p.name} — 총 ${s.total}점`);
   });
+  html += objectiveBonusHtml;
   html += `<button class="wide" id="shareResult">결과 이미지 공유하기</button>
   <button class="wide secondary" id="closeResult">닫기</button>
   </div></div>`;
   modalRoot.innerHTML = html;
+  if (humanWon) celebrateWin();
   document.getElementById('closeResult').onclick = ()=>{ modalRoot.innerHTML=''; };
   document.getElementById('shareResult').onclick = ()=>{ shareResultImage(scored); };
 
@@ -2200,6 +2695,206 @@ const DEV_INFO_HTML = `
   </div>
 `;
 
+/* ---------- 리더보드 / 업적 데이터 ---------- */
+const STATS_KEY = 'time24_stats_v1';
+function loadStats(){
+  let s = null;
+  try { s = JSON.parse(localStorage.getItem(STATS_KEY)); } catch(e){}
+  return s || { winStreak:0, totalWins:0, gamesPlayed:0, trapEncounters:0, goldenPickups:0, unlocked:[], history:[] };
+}
+function saveStats(s){
+  try { localStorage.setItem(STATS_KEY, JSON.stringify(s)); } catch(e){}
+}
+
+const ACHIEVEMENTS = [
+  { id:'streak3', text:'무패 3연승', textEn:'3 wins in a row', check:(s)=>s.winStreak>=3 },
+  { id:'trap5', text:'함정 5회 마주치기', textEn:'Encounter 5 traps', check:(s)=>s.trapEncounters>=5 },
+  { id:'golden3', text:'황금 카드칸 3번 획득', textEn:'Collect 3 golden tiles', check:(s)=>s.goldenPickups>=3 },
+];
+
+function recordGameResult(scored){
+  const s = loadStats();
+  const humanRank = scored.findIndex(x=>x.p.id===0) + 1;
+  const humanScore = scored.find(x=>x.p.id===0)?.total || 0;
+  const won = humanRank === 1;
+
+  s.gamesPlayed += 1;
+  if (won){ s.totalWins += 1; s.winStreak += 1; } else { s.winStreak = 0; }
+  s.history.unshift({ date: new Date().toISOString().slice(0,10), rank: humanRank, score: humanScore });
+  s.history = s.history.slice(0,10);
+
+  ACHIEVEMENTS.forEach(a=>{
+    if (!s.unlocked.includes(a.id) && a.check(s)){
+      s.unlocked.push(a.id);
+      showEventToast(LANG==='en' ? 'Achievement unlocked!' : '업적 달성!', LANG==='en' ? a.textEn : a.text);
+    }
+  });
+
+  saveStats(s);
+}
+
+function showSettingsModal(){
+  modalRoot.innerHTML = `
+    <div class="overlay">
+      <div class="modal">
+        <h3>${t('settingsTitle')}</h3>
+        <div class="settings-row">
+          <label>${t('sfxVolume')}</label>
+          <input type="range" id="sfxVolumeSlider" min="0" max="100" value="${Math.round(sfxVolume*100)}">
+        </div>
+        <div class="settings-row">
+          <label>${t('bgmVolume')}</label>
+          <input type="range" id="bgmVolumeSlider" min="0" max="100" value="${Math.round(bgmVolume*100)}">
+        </div>
+        <div class="settings-row">
+          <label>${t('vibration')}</label>
+          <input type="checkbox" id="vibrationToggle" ${vibrationEnabled?'checked':''}>
+        </div>
+        <div class="settings-row">
+          <label>${t('textSize')}</label>
+          <div class="settings-subrow" style="max-width:180px;">
+            <button data-size="small" class="${textSize==='small'?'selected':''}">${t('small')}</button>
+            <button data-size="normal" class="${textSize==='normal'?'selected':''}">${t('normal')}</button>
+            <button data-size="large" class="${textSize==='large'?'selected':''}">${t('large')}</button>
+          </div>
+        </div>
+        <div class="settings-row">
+          <label>${t('contrast')}</label>
+          <input type="checkbox" id="contrastToggle" ${highContrast?'checked':''}>
+        </div>
+        <div class="settings-row">
+          <label>${t('language')}</label>
+          <div class="settings-subrow" style="max-width:140px;">
+            <button data-lang="ko" class="${LANG==='ko'?'selected':''}">한국어</button>
+            <button data-lang="en" class="${LANG==='en'?'selected':''}">English</button>
+          </div>
+        </div>
+        <button class="wide" id="closeSettings">${t('close')}</button>
+      </div>
+    </div>`;
+
+  document.getElementById('sfxVolumeSlider').oninput = (e)=>{
+    sfxVolume = e.target.value/100;
+    try { localStorage.setItem('time24_sfx_volume', sfxVolume); } catch(err){}
+  };
+  document.getElementById('bgmVolumeSlider').oninput = (e)=>{
+    bgmVolume = e.target.value/100;
+    try { localStorage.setItem('time24_bgm_volume', bgmVolume); } catch(err){}
+    if (bgmMasterGain) bgmMasterGain.gain.value = bgmVolume;
+  };
+  document.getElementById('vibrationToggle').onchange = (e)=>{
+    vibrationEnabled = e.target.checked;
+    try { localStorage.setItem('time24_vibration', vibrationEnabled?'1':'0'); } catch(err){}
+  };
+  document.getElementById('contrastToggle').onchange = (e)=>{
+    highContrast = e.target.checked;
+    try { localStorage.setItem('time24_contrast', highContrast?'1':'0'); } catch(err){}
+    applyAccessibility();
+  };
+  modalRoot.querySelectorAll('[data-size]').forEach(btn=>{
+    btn.onclick = ()=>{
+      textSize = btn.dataset.size;
+      try { localStorage.setItem('time24_textsize', textSize); } catch(err){}
+      applyAccessibility();
+      showSettingsModal();
+    };
+  });
+  modalRoot.querySelectorAll('[data-lang]').forEach(btn=>{
+    btn.onclick = ()=>{
+      LANG = btn.dataset.lang;
+      try { localStorage.setItem('time24_lang', LANG); } catch(err){}
+      applyLanguage();
+      showSettingsModal();
+    };
+  });
+  document.getElementById('closeSettings').onclick = ()=>{ modalRoot.innerHTML=''; };
+}
+
+function showLeaderboardModal(){
+  const s = loadStats();
+  const best = s.history.reduce((m,h)=>Math.max(m,h.score), 0);
+  let html = `<div class="overlay"><div class="modal">
+    <h3>${t('leaderboardTitle')}</h3>
+    <div class="settings-row"><label>${t('bestScore')}</label><b>${best}</b></div>
+    <div class="settings-row"><label>${t('totalWins')}</label><b>${s.totalWins} / ${s.gamesPlayed}</b></div>
+    <div style="margin-top:8px; font-size:12px; color:#888;">${t('recentGames')}</div>`;
+  if (s.history.length===0){
+    html += `<div style="font-size:12px; color:#666; padding:10px 0;">${t('noRecords')}</div>`;
+  } else {
+    s.history.forEach(h=>{
+      html += `<div class="leaderboard-row"><span>${h.date}</span><span>${LANG==='en'?'Rank':''} ${h.rank}${LANG==='en'?'':'위'}</span><span>${h.score}${LANG==='en'?' pts':'점'}</span></div>`;
+    });
+  }
+  html += `<button class="wide" id="closeLeaderboard" style="margin-top:14px;">${t('close')}</button></div></div>`;
+  modalRoot.innerHTML = html;
+  document.getElementById('closeLeaderboard').onclick = ()=>{ modalRoot.innerHTML=''; };
+}
+
+function showAchievementsModal(){
+  const s = loadStats();
+  let html = `<div class="overlay"><div class="modal"><h3>${t('achievementsTitle')}</h3>`;
+  ACHIEVEMENTS.forEach(a=>{
+    const unlocked = s.unlocked.includes(a.id);
+    html += `<div class="achievement-item ${unlocked?'':'locked'}"><span>${LANG==='en'?a.textEn:a.text}</span><span>${unlocked?'✅':'🔒'}</span></div>`;
+  });
+  html += `<button class="wide" id="closeAchievements" style="margin-top:14px;">${t('close')}</button></div></div>`;
+  modalRoot.innerHTML = html;
+  document.getElementById('closeAchievements').onclick = ()=>{ modalRoot.innerHTML=''; };
+}
+
+function showAlmanacModal(){
+  let html = `<div class="overlay"><div class="modal" style="max-height:80vh; overflow-y:auto;">
+    <h3>${t('almanacTitle')}</h3>
+    <div style="font-size:12px; color:#ffd43b; margin-bottom:4px;">${t('cardsSection')}</div>`;
+  Object.entries(CARD_DEFS).forEach(([id,def])=>{
+    if (id==='timeheist') return; // 황금 카드칸 전용 카드는 아래에서 별도 표기
+    html += `<div class="almanac-item"><div class="ic">${def.icon}</div><div><b>${def.name}</b><span>${def.desc}</span></div></div>`;
+  });
+  html += `<div class="almanac-item"><div class="ic">⭐</div><div><b>${CARD_DEFS.timeheist.name}</b><span>${CARD_DEFS.timeheist.desc} (황금 카드칸 전용)</span></div></div>`;
+  html += `<div style="font-size:12px; color:#ffd43b; margin:10px 0 4px;">${t('terrainSection')}</div>`;
+  const terrainDesc = {
+    BUILDING:'점령 시 카드 획득 + 종료 시 점수', DANGER:'진입 시 -1시간', CHARGE:'+2시간 (3라운드마다 재충전)',
+    BANK:'시간을 안전하게 보관 (전투로 잃지 않음)', CARD:'카드 1장 획득', TIME_GATE:'탈출 모드일 때 도착 시 +6시간', START:'시작 위치',
+  };
+  Object.entries(CELL_TYPE).forEach(([type,info])=>{
+    if (type==='NORMAL') return;
+    html += `<div class="almanac-item"><div class="ic" style="background:${info.color}; border-radius:4px;"></div><div><b>${info.label}</b><span>${terrainDesc[type]||''}</span></div></div>`;
+  });
+  html += `<button class="wide" id="closeAlmanac" style="margin-top:14px;">${t('close')}</button></div></div>`;
+  modalRoot.innerHTML = html;
+  document.getElementById('closeAlmanac').onclick = ()=>{ modalRoot.innerHTML=''; };
+}
+
+/* ---------- 접근성 / 언어 적용 ---------- */
+function applyAccessibility(){
+  document.body.classList.remove('text-small','text-large');
+  if (textSize==='small') document.body.classList.add('text-small');
+  if (textSize==='large') document.body.classList.add('text-large');
+  document.body.classList.toggle('high-contrast', highContrast);
+}
+
+function applyLanguage(){
+  const map = {
+    newGameBtn:'newGame', continueBtn:'continueGame', nameBtn:'enterName', devBtn:'developer',
+    leaderboardBtn:'leaderboard', achievementsBtn:'achievements', almanacBtn:'almanac',
+    diffEasy:'easy', diffNormal:'normal', diffHard:'hard',
+    attackBtn:'attack', occupyBtn:'occupy', bankBtn:'deposit', restBtn:'rest', endTurnBtn:'endTurn',
+    skipGameBtn:'skipGame',
+  };
+  Object.entries(map).forEach(([id,key])=>{
+    const el = document.getElementById(id);
+    if (!el) return;
+    // 아이콘 span은 보존하고 텍스트만 교체
+    const iconSpan = el.querySelector('.ic');
+    if (iconSpan){ el.innerHTML=''; el.appendChild(iconSpan); el.appendChild(document.createTextNode(t(key))); }
+    else el.textContent = t(key);
+  });
+  const handLabelEl = document.querySelector('.hand-label');
+  if (handLabelEl) handLabelEl.textContent = '🎴 ' + t('myCards');
+  const skipTextEl = document.querySelector('.skip-banner-text');
+  if (skipTextEl) skipTextEl.textContent = t('skipBannerText');
+}
+
 function showDevModal(){
   modalRoot.innerHTML = `
     <div class="overlay">
@@ -2237,6 +2932,9 @@ function enterGame(){
   document.getElementById('app').style.display = 'flex';
   gameEntered = true;
   startBGM();
+  if (players[currentPlayerIdx] && players[currentPlayerIdx].type==='human' && players[currentPlayerIdx].alive){
+    startTurnTimer();
+  }
   refresh();
   maybeRunAITurn();
 }
@@ -2255,6 +2953,15 @@ document.getElementById('newGameBtn').addEventListener('click', ()=>{
   gameOver = false;
   lastTurnIdx = 0;
   logOpen = false;
+
+  // 재미 요소 상태 초기화
+  activeEvent = null;
+  goldenTileKey = null;
+  goldenTileSpawned = false;
+  lastRankOrder = [];
+  stopTurnTimer();
+  hiddenObjective = HIDDEN_OBJECTIVES[Math.floor(Math.random()*HIDDEN_OBJECTIVES.length)];
+
   document.getElementById('log').innerHTML = '';
   log('게임 시작 — 아래 흰 테두리 칸을 탭해 이동하세요.');
   enterGame();
@@ -2270,11 +2977,21 @@ document.getElementById('continueBtn').addEventListener('click', ()=>{
   // 이어하기는 인터랙티브 가이드와 AI 봐주기 둘 다 절대 나오지 않도록 강제로 끔
   tutorialMode = false;
   interactiveStepIdx = -1;
+  activeEvent = null;
+  lastRankOrder = [];
+  if (!hiddenObjective) hiddenObjective = HIDDEN_OBJECTIVES[Math.floor(Math.random()*HIDDEN_OBJECTIVES.length)];
   log('저장된 게임을 불러왔습니다.');
   enterGame();
 });
 
 document.getElementById('devBtn').addEventListener('click', showDevModal);
+document.getElementById('settingsBtn').addEventListener('click', showSettingsModal);
+document.getElementById('leaderboardBtn').addEventListener('click', showLeaderboardModal);
+document.getElementById('achievementsBtn').addEventListener('click', showAchievementsModal);
+document.getElementById('almanacBtn').addEventListener('click', showAlmanacModal);
+
+applyAccessibility();
+applyLanguage();
 
 if (!hasSavedGame()){
   document.getElementById('continueBtn').disabled = true;
