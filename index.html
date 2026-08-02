@@ -53,6 +53,10 @@
 
   /* ---------- 액션 바 ---------- */
   .action-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:6px; margin-bottom:8px; }
+  .skip-banner { background:#2a1414; border:1px solid #c92a2a; border-radius:10px; padding:12px; margin-bottom:8px; text-align:center; }
+  .skip-banner-text { font-size:12.5px; color:#ff8787; margin-bottom:8px; }
+  body.light-theme .skip-banner { background:#fff0f0; }
+  body.light-theme .skip-banner-text { color:#c92a2a; }
   .act-btn {
     background:#22262d; border:none; color:#fff; border-radius:8px;
     padding:10px 2px; font-size:10.5px; display:flex; flex-direction:column; align-items:center; gap:2px;
@@ -239,6 +243,7 @@
   <div class="start-menu">
     <button class="start-btn primary" id="newGameBtn">새 게임하기</button>
     <button class="start-btn" id="continueBtn">이어하기</button>
+    <button class="start-btn" id="nameBtn">이름 입력하기</button>
     <button class="start-btn" id="devBtn">개발자</button>
   </div>
 </div>
@@ -260,12 +265,17 @@
     <canvas id="board" width="350" height="350"></canvas>
   </div>
 
-  <div class="action-grid">
+  <div class="action-grid" id="actionGrid">
     <button class="act-btn danger" id="attackBtn"><span class="ic">⚔️</span>공격</button>
     <button class="act-btn primary" id="occupyBtn"><span class="ic">🏳️</span>점령</button>
     <button class="act-btn primary" id="bankBtn"><span class="ic">🏦</span>예치</button>
     <button class="act-btn" id="restBtn"><span class="ic">💤</span>휴식</button>
     <button class="act-btn end" id="endTurnBtn">턴 종료 ▶</button>
+  </div>
+
+  <div class="skip-banner" id="skipBanner" style="display:none;">
+    <div class="skip-banner-text">탈락했습니다 — 나머지 AI들이 자동으로 게임을 진행 중입니다.</div>
+    <button class="act-btn end" id="skipGameBtn">게임 스킵하기</button>
   </div>
 
   <div class="hand-wrap">
@@ -699,6 +709,9 @@ const DIFFICULTY_MULTIPLIERS = {
 let difficulty = 'normal';
 try { difficulty = localStorage.getItem('time24_difficulty') || 'normal'; } catch(e){}
 
+let userName = '';
+try { userName = localStorage.getItem('time24_username') || ''; } catch(e){}
+
 function scaledPersonality(base){
   const m = DIFFICULTY_MULTIPLIERS[difficulty] || DIFFICULTY_MULTIPLIERS.normal;
   return {
@@ -873,11 +886,12 @@ function makePlayer(id, name, type, personality, start){
 }
 
 function createInitialPlayers(){
+  const humanDisplayName = userName ? `${userName} 나` : '나';
   return [
-    makePlayer(0, '나', 'human', null, START_COORDS[0]),
-    makePlayer(1, '무법자', 'ai', scaledPersonality({aggro:0.85, caution:0.15, hoarding:0.10}), START_COORDS[1]),
-    makePlayer(2, '은행가', 'ai', scaledPersonality({aggro:0.20, caution:0.60, hoarding:0.90}), START_COORDS[2]),
-    makePlayer(3, '탐험가', 'ai', scaledPersonality({aggro:0.40, caution:0.30, hoarding:0.30}), START_COORDS[3]),
+    makePlayer(0, humanDisplayName, 'human', null, START_COORDS[0]),
+    makePlayer(1, 'A (무법자)', 'ai', scaledPersonality({aggro:0.85, caution:0.15, hoarding:0.10}), START_COORDS[1]),
+    makePlayer(2, 'B (은행가)', 'ai', scaledPersonality({aggro:0.20, caution:0.60, hoarding:0.90}), START_COORDS[2]),
+    makePlayer(3, 'C (탐험가)', 'ai', scaledPersonality({aggro:0.40, caution:0.30, hoarding:0.30}), START_COORDS[3]),
   ];
 }
 function applyTutorialHandicap(){
@@ -1317,6 +1331,11 @@ function refresh(){
   document.getElementById('restBtn').disabled = !isHumanTurn || cur.actionUsedThisTurn;
   document.getElementById('endTurnBtn').disabled = !isHumanTurn;
 
+  // 사람이 탈락했으면 행동 버튼 대신 '게임 스킵하기' 배너를 보여줌
+  const humanDead = !players[0].alive && !gameOver;
+  document.getElementById('actionGrid').style.display = humanDead ? 'none' : 'grid';
+  document.getElementById('skipBanner').style.display = humanDead ? 'block' : 'none';
+
   const handList = document.getElementById('handList');
   handList.innerHTML = '';
   if (cur.type==='human'){
@@ -1439,6 +1458,13 @@ function checkElimination(player){
     player.alive = false;
     if (player.type === 'human') vibrate([50,60,50,60,120]);
     log(`☠ ${player.name}: 탈락`);
+
+    // 사람이 '자기 턴 도중'(이동/공격/점령/예치 등)에 탈락하면
+    // 아무도 턴을 강제로 넘기지 않아 게임이 멈추던 버그 수정:
+    // 탈락 시점에 그게 아직 자기 턴이었다면 잠시 후 자동으로 턴을 넘김
+    if (player.type === 'human' && players[currentPlayerIdx] === player && !gameOver){
+      setTimeout(()=>{ if (!gameOver) nextTurn(); }, 700);
+    }
   }
 }
 
@@ -1706,6 +1732,11 @@ document.getElementById('endTurnBtn').addEventListener('click', ()=>{
   nextTurn();
 });
 
+document.getElementById('skipGameBtn').addEventListener('click', ()=>{
+  if (gameOver) return;
+  endGame();
+});
+
 /* ============================================================
    11. 모달
    ============================================================ */
@@ -1867,6 +1898,7 @@ function computeOccupyScore(ai, ownedByEnemy){
 }
 
 function aiTakeTurn(ai){
+  if (gameOver) return;
   if (!ai.alive){ nextTurn(); return; }
 
   if (ai.escapeMode){
@@ -2179,6 +2211,27 @@ function showDevModal(){
   document.getElementById('closeDevModal').onclick = ()=>{ modalRoot.innerHTML=''; };
 }
 
+function showNameModal(){
+  modalRoot.innerHTML = `
+    <div class="overlay">
+      <div class="modal">
+        <h3>이름 입력</h3>
+        <input type="text" id="nameInput" maxlength="8" placeholder="예: 한민" value="${userName.replace(/"/g,'')}" style="width:100%; padding:9px; border-radius:8px; border:1px solid #3a3d43; background:#14161a; color:#fff; margin:8px 0; font-size:14px;">
+        <div style="font-size:11.5px; color:#888; margin-bottom:10px;">게임 화면에 "(이름) 나"로 표시됩니다. 최대 8자.</div>
+        <button class="wide" id="nameConfirm">저장하기</button>
+        <button class="wide secondary" id="nameCancel">취소</button>
+      </div>
+    </div>`;
+  document.getElementById('nameConfirm').onclick = ()=>{
+    const val = document.getElementById('nameInput').value.trim().slice(0,8);
+    userName = val;
+    try { localStorage.setItem('time24_username', userName); } catch(e){}
+    modalRoot.innerHTML = '';
+  };
+  document.getElementById('nameCancel').onclick = ()=>{ modalRoot.innerHTML=''; };
+}
+document.getElementById('nameBtn').addEventListener('click', showNameModal);
+
 function enterGame(){
   document.getElementById('startScreen').style.display = 'none';
   document.getElementById('app').style.display = 'flex';
@@ -2191,13 +2244,11 @@ function enterGame(){
 document.getElementById('newGameBtn').addEventListener('click', ()=>{
   clearSavedGame();
 
-  let isFirstEverGame = false;
-  try { isFirstEverGame = localStorage.getItem('time24_played_before') !== '1'; } catch(e){}
-  try { localStorage.setItem('time24_played_before', '1'); } catch(e){}
-  tutorialMode = isFirstEverGame;
+  // '새 게임하기'는 매번 인터랙티브 가이드 + AI 봐주기 모드로 시작
+  tutorialMode = true;
 
   players = createInitialPlayers();
-  if (tutorialMode) applyTutorialHandicap();
+  applyTutorialHandicap();
   resetCellStates();
   currentPlayerIdx = 0;
   round = 1;
@@ -2208,14 +2259,17 @@ document.getElementById('newGameBtn').addEventListener('click', ()=>{
   log('게임 시작 — 아래 흰 테두리 칸을 탭해 이동하세요.');
   enterGame();
 
-  // 튜토리얼 슬라이드는 '새 게임하기'를 누를 때마다 항상 보여줌
-  showTutorial(tutorialMode ? startInteractiveTutorial : null);
+  // 튜토리얼 슬라이드도 매번 보여주고, 닫으면 이어서 인터랙티브 가이드 시작
+  showTutorial(startInteractiveTutorial);
 });
 
 document.getElementById('continueBtn').addEventListener('click', ()=>{
   if (!hasSavedGame()) return;
   const ok = loadGameState();
   if (!ok) return;
+  // 이어하기는 인터랙티브 가이드와 AI 봐주기 둘 다 절대 나오지 않도록 강제로 끔
+  tutorialMode = false;
+  interactiveStepIdx = -1;
   log('저장된 게임을 불러왔습니다.');
   enterGame();
 });
