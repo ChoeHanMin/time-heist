@@ -287,14 +287,14 @@ document.getElementById('helpBtn').addEventListener('click', showTutorial);
    1. 맵 데이터
    ============================================================ */
 const CELL_TYPE = {
-  NORMAL:   { label:'일반',   color:'#262a30', icon:'' },
-  START:    { label:'시작',   color:'#28304f', icon:'🚩' },
-  TIME_GATE:{ label:'시간문', color:'#4a4320', icon:'🌀' },
-  BANK:     { label:'은행',   color:'#0c4a3a', icon:'🏦' },
-  CHARGE:   { label:'충전',   color:'#1a4258', icon:'⚡' },
-  BUILDING: { label:'건물',   color:'#5c2b0d', icon:'🏢' },
-  CARD:     { label:'카드',   color:'#4a2258', icon:'🎴' },
-  DANGER:   { label:'위험',   color:'#4a1010', icon:'💀' },
+  NORMAL:   { label:'일반',   color:'#262a30' },
+  START:    { label:'시작',   color:'#28304f' },
+  TIME_GATE:{ label:'시간문', color:'#4a4320' },
+  BANK:     { label:'은행',   color:'#0c4a3a' },
+  CHARGE:   { label:'충전',   color:'#1a4258' },
+  BUILDING: { label:'건물',   color:'#5c2b0d' },
+  CARD:     { label:'카드',   color:'#4a2258' },
+  DANGER:   { label:'위험',   color:'#4a1010' },
 };
 
 const RAW_LAYOUT = [
@@ -361,7 +361,7 @@ function drawRandomCard(){ return CARD_POOL[Math.floor(Math.random()*CARD_POOL.l
    3. 플레이어 초기화
    ============================================================ */
 const PLAYER_COLORS = ['#4dabf7','#ff6b6b','#69db7c','#ffd43b'];
-const PLAYER_ICONS = ['😀','🥷','🤑','🧭'];
+const PLAYER_ICONS = ['나','무','은','탐'];
 const START_COORDS = [ {col:0,row:0}, {col:6,row:0}, {col:0,row:6}, {col:6,row:6} ];
 
 function makePlayer(id, name, type, personality, start){
@@ -414,6 +414,154 @@ let gameOver = false;
 let uiLocked = false;
 
 /* ============================================================
+   3-1. 셀 아이콘 직접 그리기 (이모지 미사용)
+   ============================================================ */
+function drawCellIcon(type, cx, cy, size){
+  ctx.save();
+  ctx.translate(cx, cy);
+
+  switch(type){
+    case 'BUILDING': {
+      const bw = size*0.52, bh = size*0.5;
+      const top = -bh/2 + size*0.04;
+      ctx.fillStyle = '#c9d3de';
+      ctx.fillRect(-bw/2, top, bw, bh);
+      ctx.fillStyle = '#9aa7b5';
+      ctx.fillRect(-bw/2-2, top-4, bw+4, 4);
+      ctx.fillStyle = '#33414f';
+      const winSize = size*0.08, gapX = size*0.12, gapY = size*0.11;
+      for (let r=0;r<2;r++){
+        for (let c=-1;c<=1;c+=2){
+          ctx.fillRect(c*gapX - winSize/2, top+size*0.08+r*gapY, winSize, winSize);
+        }
+      }
+      ctx.fillRect(-size*0.06, top+bh-size*0.16, size*0.12, size*0.16);
+      break;
+    }
+    case 'DANGER': {
+      const r = size*0.2;
+      ctx.fillStyle = '#eef1f4';
+      ctx.beginPath();
+      ctx.arc(0, -size*0.06, r, Math.PI, 0, false);
+      ctx.lineTo(r, size*0.08);
+      ctx.quadraticCurveTo(0, size*0.16, -r, size*0.08);
+      ctx.closePath();
+      ctx.fill();
+      ctx.fillStyle = '#1a1d22';
+      ctx.beginPath();
+      ctx.ellipse(-r*0.42, -size*0.07, size*0.055, size*0.07, 0, 0, Math.PI*2);
+      ctx.fill();
+      ctx.beginPath();
+      ctx.ellipse(r*0.42, -size*0.07, size*0.055, size*0.07, 0, 0, Math.PI*2);
+      ctx.fill();
+      ctx.beginPath();
+      ctx.moveTo(-r*0.32, size*0.05);
+      ctx.lineTo(0, size*0.05);
+      ctx.lineTo(-r*0.16, size*0.1);
+      ctx.closePath();
+      ctx.fill();
+      break;
+    }
+    case 'CHARGE': {
+      ctx.fillStyle = '#ffd43b';
+      ctx.beginPath();
+      ctx.moveTo(size*0.06, -size*0.24);
+      ctx.lineTo(-size*0.14, size*0.02);
+      ctx.lineTo(-size*0.01, size*0.02);
+      ctx.lineTo(-size*0.08, size*0.24);
+      ctx.lineTo(size*0.16, -size*0.05);
+      ctx.lineTo(size*0.02, -size*0.05);
+      ctx.closePath();
+      ctx.fill();
+      break;
+    }
+    case 'BANK': {
+      ctx.fillStyle = '#dfe6ee';
+      ctx.beginPath();
+      ctx.moveTo(0, -size*0.26);
+      ctx.lineTo(size*0.24, -size*0.08);
+      ctx.lineTo(-size*0.24, -size*0.08);
+      ctx.closePath();
+      ctx.fill();
+      const colW = size*0.045, colH = size*0.28, colTop = -size*0.05;
+      for (let i=-2;i<=2;i++){
+        ctx.fillRect(i*size*0.09 - colW/2, colTop, colW, colH);
+      }
+      ctx.fillRect(-size*0.26, colTop+colH, size*0.52, size*0.045);
+      break;
+    }
+    case 'CARD': {
+      const cw = size*0.4, ch = size*0.5, rad = 5;
+      ctx.fillStyle = '#7a1630';
+      roundRect(-cw/2, -ch/2, cw, ch, rad);
+      ctx.fill();
+      ctx.strokeStyle = '#ffd43b';
+      ctx.lineWidth = 2;
+      roundRect(-cw/2, -ch/2, cw, ch, rad);
+      ctx.stroke();
+      ctx.fillStyle = '#ffd43b';
+      ctx.beginPath();
+      ctx.moveTo(0, -size*0.12);
+      ctx.lineTo(size*0.08, 0);
+      ctx.lineTo(0, size*0.12);
+      ctx.lineTo(-size*0.08, 0);
+      ctx.closePath();
+      ctx.fill();
+      break;
+    }
+    case 'TIME_GATE': {
+      ctx.strokeStyle = '#4dabf7';
+      ctx.lineWidth = size*0.045;
+      ctx.lineCap = 'round';
+      ctx.beginPath();
+      const turns = 2.1, steps = 40;
+      for (let i=0;i<=steps;i++){
+        const t = i/steps;
+        const angle = t*turns*Math.PI*2;
+        const r = t*size*0.26;
+        const px = Math.cos(angle)*r, py = Math.sin(angle)*r;
+        if (i===0) ctx.moveTo(px,py); else ctx.lineTo(px,py);
+      }
+      ctx.stroke();
+      ctx.fillStyle = '#ffd43b';
+      ctx.beginPath();
+      ctx.arc(0,0,size*0.035,0,Math.PI*2);
+      ctx.fill();
+      break;
+    }
+    case 'START': {
+      ctx.strokeStyle = '#cbd5e0';
+      ctx.lineWidth = size*0.045;
+      ctx.lineCap = 'round';
+      ctx.beginPath();
+      ctx.moveTo(-size*0.14, size*0.24);
+      ctx.lineTo(-size*0.14, -size*0.24);
+      ctx.stroke();
+      ctx.fillStyle = '#ff6b6b';
+      ctx.beginPath();
+      ctx.moveTo(-size*0.14, -size*0.24);
+      ctx.lineTo(size*0.16, -size*0.14);
+      ctx.lineTo(-size*0.14, -size*0.02);
+      ctx.closePath();
+      ctx.fill();
+      break;
+    }
+  }
+  ctx.restore();
+}
+
+function roundRect(x, y, w, h, r){
+  ctx.beginPath();
+  ctx.moveTo(x+r, y);
+  ctx.arcTo(x+w, y, x+w, y+h, r);
+  ctx.arcTo(x+w, y+h, x, y+h, r);
+  ctx.arcTo(x, y+h, x, y, r);
+  ctx.arcTo(x, y, x+w, y, r);
+  ctx.closePath();
+}
+
+
+/* ============================================================
    4. 캔버스 렌더링
    ============================================================ */
 const canvas = document.getElementById('board');
@@ -444,11 +592,8 @@ function draw(){
         ctx.strokeRect(x+2.5,y+2.5,SIZE-5,SIZE-5);
       }
 
-      if (info.icon){
-        ctx.font = '20px sans-serif';
-        ctx.textAlign = 'center';
-        ctx.textBaseline = 'middle';
-        ctx.fillText(info.icon, x+SIZE/2, y+SIZE/2-2);
+      if (state.type !== 'NORMAL'){
+        drawCellIcon(state.type, x+SIZE/2, y+SIZE/2-2, SIZE);
       }
 
       if (cur.alive && cur.type==='human' && !uiLocked && !cur.frozenNextMove && isAdjacent(cur,{col,row})){
@@ -465,8 +610,9 @@ function draw(){
     if (!p.alive) return;
     const cx = p.col*SIZE + SIZE/2;
     const cy = p.row*SIZE + SIZE/2;
-    const ox = (p.id % 2 === 0 ? -1:1) * 9;
-    const oy = (p.id < 2 ? -1:1) * 9 + 12;
+    // 2x2 격자로 배치: 셀 경계를 절대 벗어나지 않도록 반지름+오프셋을 셀 절반(SIZE/2) 안쪽으로 제한
+    const ox = (p.id % 2 === 0 ? -1:1) * (SIZE*0.16);
+    const oy = (p.id < 2 ? -1:1) * (SIZE*0.16);
 
     ctx.beginPath();
     ctx.arc(cx+ox, cy+oy, 9, 0, Math.PI*2);
