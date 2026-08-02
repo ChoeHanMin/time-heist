@@ -94,23 +94,78 @@
   .final-rank:last-child { border-bottom:none; }
   .final-rank b { color:#ffd43b; }
 
-  /* ---------- 튜토리얼 ---------- */
-  .tut-icon { font-size:40px; text-align:center; margin-bottom:10px; }
-  .tut-text { font-size:13px; line-height:1.6; color:#ddd; margin-bottom:16px; }
+  /* ---------- 튜토리얼 (스포트라이트 방식) ---------- */
+  #tutSpot {
+    position:fixed; z-index:79; pointer-events:none;
+    border:3px solid #ffd43b; border-radius:14px;
+    box-shadow: 0 0 0 9999px rgba(0,0,0,0.74), 0 0 22px 6px rgba(255,212,59,0.55);
+    transition: all 0.28s ease;
+  }
+  .tut-card-bottom {
+    position:fixed; left:0; right:0; bottom:0; z-index:81;
+    background:#1c1f24; border-radius:16px 16px 0 0; padding:18px;
+    max-height:48vh; overflow-y:auto;
+    box-shadow:0 -8px 26px rgba(0,0,0,0.5);
+  }
+  .tut-card-top {
+    position:fixed; left:0; right:0; top:0; z-index:81;
+    background:#1c1f24; border-radius:0 0 16px 16px; padding:18px;
+    padding-top: calc(18px + env(safe-area-inset-top));
+    max-height:48vh; overflow-y:auto;
+    box-shadow:0 8px 26px rgba(0,0,0,0.5);
+  }
+  .tut-icon { font-size:36px; text-align:center; margin-bottom:8px; }
+  .tut-text { font-size:13px; line-height:1.6; color:#ddd; margin-bottom:14px; }
   .tut-dots { display:flex; gap:5px; justify-content:center; margin-bottom:14px; }
   .tut-dots span { width:6px; height:6px; border-radius:50%; background:#3a3d43; }
-  .tut-dots span.on { background:#3b5bdb; }
+  .tut-dots span.on { background:#ffd43b; }
   .tut-nav { display:flex; gap:8px; }
   .tut-nav button { flex:1; padding:12px; border:none; border-radius:8px; font-size:13px; }
   .tut-nav .skip { background:#2a2e35; color:#999; }
   .tut-nav .prev { background:#2a2e35; color:#fff; }
   .tut-nav .prev:disabled { opacity:0.35; }
   .tut-nav .next { background:#3b5bdb; color:#fff; font-weight:700; }
+
+  /* ---------- 시작 화면 ---------- */
+  #startScreen {
+    position:fixed; inset:0; z-index:60;
+    background: radial-gradient(circle at 50% 30%, #1a1d24 0%, #08090c 75%);
+    display:flex; flex-direction:column; align-items:center; justify-content:center;
+    padding:24px; text-align:center;
+  }
+  #startScreen img.start-icon { width:120px; height:120px; margin-bottom:18px; filter: drop-shadow(0 0 24px rgba(255,212,59,0.25)); }
+  #startScreen h1 { font-size:26px; margin:0 0 4px; color:#fff; }
+  #startScreen .start-sub { color:#8a929c; font-size:13px; margin-bottom:36px; }
+  .start-menu { width:100%; max-width:300px; display:flex; flex-direction:column; gap:12px; }
+  .start-btn {
+    width:100%; padding:15px; border:none; border-radius:10px;
+    font-size:15px; font-weight:700; cursor:pointer; color:#fff;
+    background:#22262d;
+  }
+  .start-btn.primary { background:#3b5bdb; }
+  .start-btn:disabled { opacity:0.35; }
+  .start-btn .sub { display:block; font-size:10.5px; font-weight:400; color:#9aa0a8; margin-top:2px; }
+
+  .dev-modal { text-align:left; }
+  .dev-modal .dev-name { font-size:17px; font-weight:800; color:#ffd43b; margin-bottom:2px; }
+  .dev-modal .dev-school { font-size:13px; color:#ccc; margin-bottom:16px; }
+  .dev-modal .dev-quote { font-size:13px; line-height:1.7; color:#aab0b8; border-top:1px solid #2a2e35; padding-top:14px; }
 </style>
 </head>
 <body>
 
-<div id="app">
+<div id="startScreen">
+  <img class="start-icon" src="./icon-512.png" alt="Time Heist 24">
+  <h1>Time Heist 24</h1>
+  <div class="start-sub">시간을 훔치고, 시간을 지켜라</div>
+  <div class="start-menu">
+    <button class="start-btn primary" id="newGameBtn">새 게임하기</button>
+    <button class="start-btn" id="continueBtn">이어하기</button>
+    <button class="start-btn" id="devBtn">개발자</button>
+  </div>
+</div>
+
+<div id="app" style="display:none;">
   <div class="header">
     <h1>Time Heist 24</h1>
     <div style="display:flex; align-items:center; gap:8px;">
@@ -152,36 +207,66 @@
    0. 튜토리얼
    ============================================================ */
 const TUTORIAL_SLIDES = [
-  { icon:'⏳', text:'모두 24시간으로 시작합니다.<br>시간은 <b>체력이자 행동력이자 최종 점수</b>입니다. 0이 되면 탈락해요.' },
-  { icon:'👣', text:'칸을 탭하면 이동합니다.<br>턴의 <b>첫 이동은 무료</b>, 같은 턴 두 번째 이동부터는 1시간이 듭니다.' },
-  { icon:'🏢💀⚡', text:'건물은 점령해서 카드와 점수를 얻고,<br>위험지역(💀)은 밟으면 -1시간,<br>충전소(⚡)는 +2시간을 줍니다 (3라운드마다 재충전).' },
-  { icon:'⚔️', text:'인접한 상대를 공격하면 서로 <b>강공·방어·회피</b>를 동시에 고릅니다.<br>강공은 회피를, 회피는 방어를, 방어는 강공을 이깁니다.' },
-  { icon:'🏦', text:'은행(🏦)에 시간을 맡기면 전투로 잃지 않지만, 맡긴 시간은 행동에 쓸 수 없어요. 게임 종료 점수에는 포함됩니다.' },
-  { icon:'🌀', text:'시간이 3 이하가 되면 <b>개인 탈출 모드</b>! 공격은 못 하지만 이동이 늘어나고, 3턴 안에 중앙 시간문(🌀)에 도착하면 +6시간을 받습니다.' },
-  { icon:'🏆', text:'12라운드 후 <b>보유 시간 + 은행 + 건물 점수</b>가 가장 높은 사람이 승리합니다. 행운을 빌어요!' },
+  { icon:'⏳', text:'모두 24시간으로 시작합니다.<br>시간은 <b>체력이자 행동력이자 최종 점수</b>입니다. 0이 되면 탈락해요.', target:'playerStrip' },
+  { icon:'👣', text:'칸을 탭하면 이동합니다.<br>턴의 <b>첫 이동은 무료</b>, 같은 턴 두 번째 이동부터는 1시간이 듭니다.', target:'board' },
+  { icon:'🏢💀⚡', text:'건물은 점령해서 카드와 점수를 얻고,<br>위험지역(💀)은 밟으면 -1시간,<br>충전소(⚡)는 +2시간을 줍니다 (3라운드마다 재충전).', target:'board' },
+  { icon:'⚔️', text:'인접한 상대를 공격하면 서로 <b>강공·방어·회피</b>를 동시에 고릅니다.<br>강공은 회피를, 회피는 방어를, 방어는 강공을 이깁니다.', target:'attackBtn' },
+  { icon:'🏦', text:'은행(🏦)에 시간을 맡기면 전투로 잃지 않지만, 맡긴 시간은 행동에 쓸 수 없어요. 게임 종료 점수에는 포함됩니다.', target:'bankBtn' },
+  { icon:'🌀', text:'시간이 3 이하가 되면 <b>개인 탈출 모드</b>! 공격은 못 하지만 이동이 늘어나고, 3턴 안에 중앙 시간문(🌀)에 도착하면 +6시간을 받습니다.', target:'board' },
+  { icon:'🏆', text:'12라운드 후 <b>보유 시간 + 은행 + 건물 점수</b>가 가장 높은 사람이 승리합니다. 행운을 빌어요!', target:'playerStrip' },
 ];
 let tutIdx = 0;
 
 function showTutorial(){
   tutIdx = 0;
   renderTutorialSlide();
+  window.addEventListener('resize', repositionSpotlight);
+}
+function repositionSpotlight(){
+  const spot = document.getElementById('tutSpot');
+  if (!spot) return;
+  const s = TUTORIAL_SLIDES[tutIdx];
+  const targetEl = s.target ? document.getElementById(s.target) : null;
+  if (targetEl){
+    const r = targetEl.getBoundingClientRect();
+    const pad = 6;
+    spot.style.left = (r.left-pad)+'px';
+    spot.style.top = (r.top-pad)+'px';
+    spot.style.width = (r.width+pad*2)+'px';
+    spot.style.height = (r.height+pad*2)+'px';
+  } else {
+    spot.style.left = (window.innerWidth/2)+'px';
+    spot.style.top = (window.innerHeight/2)+'px';
+    spot.style.width = '0px';
+    spot.style.height = '0px';
+  }
 }
 function renderTutorialSlide(){
   const s = TUTORIAL_SLIDES[tutIdx];
   const dots = TUTORIAL_SLIDES.map((_,i)=>`<span class="${i===tutIdx?'on':''}"></span>`).join('');
+
+  // 타겟이 화면 아래쪽에 있으면 카드를 위쪽에, 위쪽에 있으면 카드를 아래쪽에 배치
+  const targetEl = s.target ? document.getElementById(s.target) : null;
+  let cardClass = 'tut-card-bottom';
+  if (targetEl){
+    const r = targetEl.getBoundingClientRect();
+    const targetCenterY = r.top + r.height/2;
+    if (targetCenterY > window.innerHeight * 0.5) cardClass = 'tut-card-top';
+  }
+
   document.getElementById('tutorialRoot').innerHTML = `
-    <div class="overlay">
-      <div class="modal">
-        <div class="tut-icon">${s.icon}</div>
-        <div class="tut-text">${s.text}</div>
-        <div class="tut-dots">${dots}</div>
-        <div class="tut-nav">
-          <button class="prev" id="tutPrev" ${tutIdx===0?'disabled':''}>이전</button>
-          <button class="skip" id="tutSkip">건너뛰기</button>
-          <button class="next" id="tutNext">${tutIdx===TUTORIAL_SLIDES.length-1 ? '시작하기' : '다음'}</button>
-        </div>
+    <div id="tutSpot"></div>
+    <div class="${cardClass}">
+      <div class="tut-icon">${s.icon}</div>
+      <div class="tut-text">${s.text}</div>
+      <div class="tut-dots">${dots}</div>
+      <div class="tut-nav">
+        <button class="prev" id="tutPrev" ${tutIdx===0?'disabled':''}>이전</button>
+        <button class="skip" id="tutSkip">건너뛰기</button>
+        <button class="next" id="tutNext">${tutIdx===TUTORIAL_SLIDES.length-1 ? '시작하기' : '다음'}</button>
       </div>
     </div>`;
+  repositionSpotlight();
   document.getElementById('tutPrev').onclick = ()=>{
     if (tutIdx > 0){ tutIdx--; renderTutorialSlide(); }
   };
@@ -193,6 +278,7 @@ function renderTutorialSlide(){
 }
 function closeTutorial(){
   document.getElementById('tutorialRoot').innerHTML = '';
+  window.removeEventListener('resize', repositionSpotlight);
   try { localStorage.setItem('time24_seen_tutorial','1'); } catch(e){}
 }
 document.getElementById('helpBtn').addEventListener('click', showTutorial);
@@ -304,12 +390,23 @@ function makePlayer(id, name, type, personality, start){
   };
 }
 
-let players = [
-  makePlayer(0, '나', 'human', null, START_COORDS[0]),
-  makePlayer(1, '무법자', 'ai', {aggro:0.85, caution:0.15, hoarding:0.10}, START_COORDS[1]),
-  makePlayer(2, '은행가', 'ai', {aggro:0.20, caution:0.60, hoarding:0.90}, START_COORDS[2]),
-  makePlayer(3, '탐험가', 'ai', {aggro:0.40, caution:0.30, hoarding:0.30}, START_COORDS[3]),
-];
+function createInitialPlayers(){
+  return [
+    makePlayer(0, '나', 'human', null, START_COORDS[0]),
+    makePlayer(1, '무법자', 'ai', {aggro:0.85, caution:0.15, hoarding:0.10}, START_COORDS[1]),
+    makePlayer(2, '은행가', 'ai', {aggro:0.20, caution:0.60, hoarding:0.90}, START_COORDS[2]),
+    makePlayer(3, '탐험가', 'ai', {aggro:0.40, caution:0.30, hoarding:0.30}, START_COORDS[3]),
+  ];
+}
+function resetCellStates(){
+  Object.keys(cellStates).forEach(k=>{
+    cellStates[k].occupiedBy = null;
+    cellStates[k].trap = null;
+    cellStates[k].chargeUsedRound = -1;
+  });
+}
+
+let players = createInitialPlayers();
 
 let currentPlayerIdx = 0;
 let round = 1;
@@ -423,6 +520,43 @@ function buildingCountOf(playerId){
   return Object.values(cellStates).filter(c=>c.type==='BUILDING' && c.occupiedBy===playerId).length;
 }
 
+/* ---------- 저장 / 이어하기 ---------- */
+const SAVE_KEY = 'time24_save_v1';
+
+function saveGameState(){
+  try {
+    const data = {
+      players: players.map(p=>({...p, visited: Array.from(p.visited)})),
+      cellStates,
+      currentPlayerIdx, round, gameOver, lastTurnIdx,
+    };
+    localStorage.setItem(SAVE_KEY, JSON.stringify(data));
+  } catch(e){ /* 저장 실패는 조용히 무시 (프라이빗 모드 등) */ }
+}
+
+function hasSavedGame(){
+  try { return !!localStorage.getItem(SAVE_KEY); } catch(e){ return false; }
+}
+
+function loadGameState(){
+  let data;
+  try { data = JSON.parse(localStorage.getItem(SAVE_KEY)); } catch(e){ return false; }
+  if (!data) return false;
+
+  players = data.players.map(p=>({...p, visited: new Set(p.visited)}));
+  Object.keys(cellStates).forEach(k=>{ delete cellStates[k]; });
+  Object.assign(cellStates, data.cellStates);
+  currentPlayerIdx = data.currentPlayerIdx;
+  round = data.round;
+  gameOver = data.gameOver;
+  lastTurnIdx = data.lastTurnIdx;
+  return true;
+}
+
+function clearSavedGame(){
+  try { localStorage.removeItem(SAVE_KEY); } catch(e){}
+}
+
 function refresh(){
   draw();
   document.getElementById('roundLabel').textContent = `R${Math.min(round,TOTAL_ROUNDS)}/${TOTAL_ROUNDS}`;
@@ -470,6 +604,8 @@ function refresh(){
   } else {
     handList.innerHTML = '<div class="empty-hint">AI 턴 진행 중…</div>';
   }
+
+  saveGameState();
 }
 
 /* ============================================================
@@ -1141,14 +1277,65 @@ function endGame(){
 }
 
 /* ============================================================
-   시작
+   시작 화면
    ============================================================ */
-log('게임 시작 — 아래 흰 테두리 칸을 탭해 이동하세요.');
-refresh();
+const DEV_INFO_HTML = `
+  <div class="dev-modal">
+    <div class="dev-name">최한민</div>
+    <div class="dev-school">한국외국어대학교 Computer Engineering &amp; Science</div>
+    <div class="dev-quote">기획부터 개발까지 전부 하느라 피곤하지만<br>이 정도로는 끄떡없지</div>
+  </div>
+`;
 
-let seenTutorial = false;
-try { seenTutorial = localStorage.getItem('time24_seen_tutorial') === '1'; } catch(e){}
-if (!seenTutorial) showTutorial();
+function showDevModal(){
+  modalRoot.innerHTML = `
+    <div class="overlay">
+      <div class="modal">
+        ${DEV_INFO_HTML}
+        <button class="wide" id="closeDevModal" style="margin-top:18px;">닫기</button>
+      </div>
+    </div>`;
+  document.getElementById('closeDevModal').onclick = ()=>{ modalRoot.innerHTML=''; };
+}
+
+function enterGame(){
+  document.getElementById('startScreen').style.display = 'none';
+  document.getElementById('app').style.display = 'flex';
+  refresh();
+  maybeRunAITurn();
+}
+
+document.getElementById('newGameBtn').addEventListener('click', ()=>{
+  clearSavedGame();
+  players = createInitialPlayers();
+  resetCellStates();
+  currentPlayerIdx = 0;
+  round = 1;
+  gameOver = false;
+  lastTurnIdx = 0;
+  logOpen = false;
+  document.getElementById('log').innerHTML = '';
+  log('게임 시작 — 아래 흰 테두리 칸을 탭해 이동하세요.');
+  enterGame();
+
+  let seenTutorial = false;
+  try { seenTutorial = localStorage.getItem('time24_seen_tutorial') === '1'; } catch(e){}
+  if (!seenTutorial) showTutorial();
+});
+
+document.getElementById('continueBtn').addEventListener('click', ()=>{
+  if (!hasSavedGame()) return;
+  const ok = loadGameState();
+  if (!ok) return;
+  log('저장된 게임을 불러왔습니다.');
+  enterGame();
+});
+
+document.getElementById('devBtn').addEventListener('click', showDevModal);
+
+if (!hasSavedGame()){
+  document.getElementById('continueBtn').disabled = true;
+}
 
 /* ---------- 서비스워커 등록 (오프라인 캐싱) ---------- */
 if ('serviceWorker' in navigator) {
