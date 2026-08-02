@@ -1,0 +1,1163 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<title>Time Heist 24</title>
+<link rel="manifest" href="./manifest.json">
+<meta name="theme-color" content="#0f1115">
+<link rel="apple-touch-icon" href="./icon-192.png">
+<style>
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html, body {
+    margin: 0; padding: 0;
+    background: #0f1115;
+    color: #e8e8e8;
+    font-family: -apple-system, 'Segoe UI', sans-serif;
+    overscroll-behavior: none;
+    touch-action: manipulation;
+  }
+  #app {
+    max-width: 430px;
+    margin: 0 auto;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    padding: 10px 10px calc(10px + env(safe-area-inset-bottom));
+  }
+
+  /* ---------- 상단 헤더 ---------- */
+  .header { display:flex; align-items:center; justify-content:space-between; margin-bottom:8px; }
+  .header h1 { font-size:16px; margin:0; }
+  .round-pill { font-size:12px; background:#22262d; padding:4px 10px; border-radius:20px; color:#ffd43b; font-weight:700; }
+  .help-btn { background:#22262d; border:none; color:#fff; width:30px; height:30px; border-radius:50%; font-size:14px; }
+
+  /* ---------- 플레이어 상태 스트립 (가로) ---------- */
+  .player-strip { display:flex; gap:6px; margin-bottom:8px; }
+  .p-chip {
+    flex:1; background:#1c1f24; border-radius:8px; padding:6px 4px;
+    display:flex; flex-direction:column; align-items:center; gap:2px;
+    border:2px solid transparent; font-size:10.5px; position:relative;
+  }
+  .p-chip.active { border-color:#fff; }
+  .p-chip.dead { opacity:0.35; }
+  .p-chip .dot { width:9px; height:9px; border-radius:50%; }
+  .p-chip .t { font-weight:800; font-size:12px; }
+  .p-chip .n { color:#aaa; font-size:9px; text-align:center; line-height:1.1; }
+  .p-chip .esc { position:absolute; top:-5px; right:-5px; background:#e03131; font-size:8px; padding:1px 4px; border-radius:6px; }
+
+  /* ---------- 보드 ---------- */
+  .board-wrap { width:100%; display:flex; justify-content:center; margin-bottom:8px; }
+  canvas { width:100%; max-width:410px; aspect-ratio:1/1; background:#1a1d22; border-radius:10px; touch-action: manipulation; }
+
+  /* ---------- 액션 바 ---------- */
+  .action-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:6px; margin-bottom:8px; }
+  .act-btn {
+    background:#22262d; border:none; color:#fff; border-radius:8px;
+    padding:10px 2px; font-size:10.5px; display:flex; flex-direction:column; align-items:center; gap:2px;
+  }
+  .act-btn .ic { font-size:17px; }
+  .act-btn:disabled { opacity:0.3; }
+  .act-btn.primary { background:#3b5bdb; }
+  .act-btn.danger { background:#c92a2a; }
+  .act-btn.end { background:#2f9e44; grid-column: span 4; flex-direction:row; justify-content:center; padding:11px; font-size:13px; font-weight:700; }
+
+  /* ---------- 카드 손패 (가로 스크롤) ---------- */
+  .hand-wrap { margin-bottom:8px; }
+  .hand-label { font-size:10.5px; color:#888; margin-bottom:4px; }
+  .hand-scroll { display:flex; gap:6px; overflow-x:auto; padding-bottom:2px; }
+  .hc { flex:0 0 auto; width:118px; background:#1c1f24; border:1px solid #2f333a; border-radius:8px; padding:7px 8px; font-size:10.5px; }
+  .hc b { color:#ffd43b; display:block; font-size:11px; margin-bottom:2px; }
+  .hc.disabled { opacity:0.4; }
+  .empty-hint { color:#555; font-size:10.5px; }
+
+  /* ---------- 로그 (접이식) ---------- */
+  .log-card { background:#1c1f24; border-radius:8px; padding:8px 10px; }
+  .log-head { display:flex; justify-content:space-between; align-items:center; font-size:10.5px; color:#888; cursor:pointer; }
+  .log { font-size:10.5px; color:#aaa; max-height:110px; overflow-y:auto; line-height:1.5; margin-top:6px; }
+  .log div:first-child { color:#fff; }
+  .log.collapsed { display:none; }
+
+  /* ---------- 모달 공통 ---------- */
+  .overlay { position:fixed; inset:0; background:rgba(0,0,0,0.68); display:flex; align-items:center; justify-content:center; z-index:80; padding:16px; }
+  .modal { background:#1c1f24; border-radius:14px; padding:18px; width:100%; max-width:360px; max-height:85vh; overflow-y:auto; box-shadow:0 8px 30px rgba(0,0,0,0.5); }
+  .modal h3 { margin:0 0 12px; font-size:15px; }
+  .choices { display:flex; gap:8px; }
+  .choices button { flex:1; padding:16px 4px; font-size:13px; border:none; border-radius:8px; background:#2a2e35; color:#fff; }
+  .choices button:active { background:#3b5bdb; }
+  .target-list button { width:100%; text-align:left; margin-top:6px; padding:10px; border:none; border-radius:8px; background:#2a2e35; color:#fff; font-size:13px; }
+  .modal input[type=number] { width:100%; padding:9px; border-radius:8px; border:1px solid #3a3d43; background:#14161a; color:#fff; margin:8px 0; font-size:14px; }
+  .modal button.wide { width:100%; padding:11px; border:none; border-radius:8px; background:#3b5bdb; color:#fff; font-size:13px; margin-top:6px; }
+  .modal button.wide.secondary { background:#2a2e35; }
+
+  .final-rank { font-size:12.5px; padding:6px 0; border-bottom:1px solid #2a2e35; }
+  .final-rank:last-child { border-bottom:none; }
+  .final-rank b { color:#ffd43b; }
+
+  /* ---------- 튜토리얼 ---------- */
+  .tut-icon { font-size:40px; text-align:center; margin-bottom:10px; }
+  .tut-text { font-size:13px; line-height:1.6; color:#ddd; margin-bottom:16px; }
+  .tut-dots { display:flex; gap:5px; justify-content:center; margin-bottom:14px; }
+  .tut-dots span { width:6px; height:6px; border-radius:50%; background:#3a3d43; }
+  .tut-dots span.on { background:#3b5bdb; }
+  .tut-nav { display:flex; gap:8px; }
+  .tut-nav button { flex:1; padding:12px; border:none; border-radius:8px; font-size:13px; }
+  .tut-nav .skip { background:#2a2e35; color:#999; }
+  .tut-nav .prev { background:#2a2e35; color:#fff; }
+  .tut-nav .prev:disabled { opacity:0.35; }
+  .tut-nav .next { background:#3b5bdb; color:#fff; font-weight:700; }
+</style>
+</head>
+<body>
+
+<div id="app">
+  <div class="header">
+    <h1>Time Heist 24</h1>
+    <div style="display:flex; align-items:center; gap:8px;">
+      <span class="round-pill" id="roundLabel">R1/12</span>
+      <button class="help-btn" id="helpBtn">?</button>
+    </div>
+  </div>
+
+  <div class="player-strip" id="playerStrip"></div>
+
+  <div class="board-wrap">
+    <canvas id="board" width="350" height="350"></canvas>
+  </div>
+
+  <div class="action-grid">
+    <button class="act-btn danger" id="attackBtn"><span class="ic">⚔️</span>공격</button>
+    <button class="act-btn primary" id="occupyBtn"><span class="ic">🏳️</span>점령</button>
+    <button class="act-btn primary" id="bankBtn"><span class="ic">🏦</span>예치</button>
+    <button class="act-btn" id="restBtn"><span class="ic">💤</span>휴식</button>
+    <button class="act-btn end" id="endTurnBtn">턴 종료 ▶</button>
+  </div>
+
+  <div class="hand-wrap">
+    <div class="hand-label">🎴 내 카드 (최대 3장 · 턴당 1장 사용)</div>
+    <div class="hand-scroll" id="handList"></div>
+  </div>
+
+  <div class="log-card">
+    <div class="log-head" id="logToggle">📜 게임 로그 <span id="logChevron">▾</span></div>
+    <div class="log" id="log"></div>
+  </div>
+</div>
+
+<div id="modalRoot"></div>
+<div id="tutorialRoot"></div>
+
+<script>
+/* ============================================================
+   0. 튜토리얼
+   ============================================================ */
+const TUTORIAL_SLIDES = [
+  { icon:'⏳', text:'모두 24시간으로 시작합니다.<br>시간은 <b>체력이자 행동력이자 최종 점수</b>입니다. 0이 되면 탈락해요.' },
+  { icon:'👣', text:'칸을 탭하면 이동합니다.<br>턴의 <b>첫 이동은 무료</b>, 같은 턴 두 번째 이동부터는 1시간이 듭니다.' },
+  { icon:'🏢💀⚡', text:'건물은 점령해서 카드와 점수를 얻고,<br>위험지역(💀)은 밟으면 -1시간,<br>충전소(⚡)는 +2시간을 줍니다 (3라운드마다 재충전).' },
+  { icon:'⚔️', text:'인접한 상대를 공격하면 서로 <b>강공·방어·회피</b>를 동시에 고릅니다.<br>강공은 회피를, 회피는 방어를, 방어는 강공을 이깁니다.' },
+  { icon:'🏦', text:'은행(🏦)에 시간을 맡기면 전투로 잃지 않지만, 맡긴 시간은 행동에 쓸 수 없어요. 게임 종료 점수에는 포함됩니다.' },
+  { icon:'🌀', text:'시간이 3 이하가 되면 <b>개인 탈출 모드</b>! 공격은 못 하지만 이동이 늘어나고, 3턴 안에 중앙 시간문(🌀)에 도착하면 +6시간을 받습니다.' },
+  { icon:'🏆', text:'12라운드 후 <b>보유 시간 + 은행 + 건물 점수</b>가 가장 높은 사람이 승리합니다. 행운을 빌어요!' },
+];
+let tutIdx = 0;
+
+function showTutorial(){
+  tutIdx = 0;
+  renderTutorialSlide();
+}
+function renderTutorialSlide(){
+  const s = TUTORIAL_SLIDES[tutIdx];
+  const dots = TUTORIAL_SLIDES.map((_,i)=>`<span class="${i===tutIdx?'on':''}"></span>`).join('');
+  document.getElementById('tutorialRoot').innerHTML = `
+    <div class="overlay">
+      <div class="modal">
+        <div class="tut-icon">${s.icon}</div>
+        <div class="tut-text">${s.text}</div>
+        <div class="tut-dots">${dots}</div>
+        <div class="tut-nav">
+          <button class="prev" id="tutPrev" ${tutIdx===0?'disabled':''}>이전</button>
+          <button class="skip" id="tutSkip">건너뛰기</button>
+          <button class="next" id="tutNext">${tutIdx===TUTORIAL_SLIDES.length-1 ? '시작하기' : '다음'}</button>
+        </div>
+      </div>
+    </div>`;
+  document.getElementById('tutPrev').onclick = ()=>{
+    if (tutIdx > 0){ tutIdx--; renderTutorialSlide(); }
+  };
+  document.getElementById('tutSkip').onclick = closeTutorial;
+  document.getElementById('tutNext').onclick = ()=>{
+    if (tutIdx === TUTORIAL_SLIDES.length-1) closeTutorial();
+    else { tutIdx++; renderTutorialSlide(); }
+  };
+}
+function closeTutorial(){
+  document.getElementById('tutorialRoot').innerHTML = '';
+  try { localStorage.setItem('time24_seen_tutorial','1'); } catch(e){}
+}
+document.getElementById('helpBtn').addEventListener('click', showTutorial);
+
+/* ============================================================
+   1. 맵 데이터
+   ============================================================ */
+const CELL_TYPE = {
+  NORMAL:   { label:'일반',   color:'#262a30', icon:'' },
+  START:    { label:'시작',   color:'#28304f', icon:'🚩' },
+  TIME_GATE:{ label:'시간문', color:'#4a4320', icon:'🌀' },
+  BANK:     { label:'은행',   color:'#0c4a3a', icon:'🏦' },
+  CHARGE:   { label:'충전',   color:'#1a4258', icon:'⚡' },
+  BUILDING: { label:'건물',   color:'#5c2b0d', icon:'🏢' },
+  CARD:     { label:'카드',   color:'#4a2258', icon:'🎴' },
+  DANGER:   { label:'위험',   color:'#4a1010', icon:'💀' },
+};
+
+const RAW_LAYOUT = [
+  ['START','NORMAL','BUILDING','CHARGE','DANGER','NORMAL','START'],
+  ['NORMAL','CARD','NORMAL','BUILDING','NORMAL','BANK','NORMAL'],
+  ['CHARGE','NORMAL','DANGER','BUILDING','DANGER','NORMAL','CHARGE'],
+  ['BUILDING','BANK','NORMAL','TIME_GATE','NORMAL','CARD','BUILDING'],
+  ['CHARGE','NORMAL','DANGER','BUILDING','DANGER','NORMAL','CHARGE'],
+  ['NORMAL','BUILDING','NORMAL','CARD','NORMAL','BUILDING','NORMAL'],
+  ['START','NORMAL','CHARGE','DANGER','CARD','NORMAL','START'],
+];
+const COLS = 'ABCDEFG';
+const SIZE = 50; // 내부 논리 좌표계 (350/7)
+const CHARGE_RECHARGE_ROUNDS = 3;
+const TOTAL_ROUNDS = 12;
+const GATE_POS = { col:3, row:3 };
+
+function cellKey(c,r){ return `${c},${r}`; }
+function manhattan(a,b){ return Math.abs(a.col-b.col)+Math.abs(a.row-b.row); }
+
+function buildCellStates(){
+  const cells = {};
+  for (let row=0; row<7; row++){
+    for (let col=0; col<7; col++){
+      cells[cellKey(col,row)] = {
+        type: RAW_LAYOUT[row][col],
+        chargeUsedRound: -1,
+        occupiedBy: null,
+        trap: null,
+      };
+    }
+  }
+  return cells;
+}
+const cellStates = buildCellStates();
+
+function allCellsOfType(type){
+  const out = [];
+  for (let row=0; row<7; row++) for (let col=0; col<7; col++)
+    if (RAW_LAYOUT[row][col] === type) out.push({col,row});
+  return out;
+}
+const CHARGE_CELLS = allCellsOfType('CHARGE');
+const BANK_CELLS = allCellsOfType('BANK');
+const CARD_CELLS = allCellsOfType('CARD');
+
+/* ============================================================
+   2. 카드 정의
+   ============================================================ */
+const CARD_DEFS = {
+  compress:      { name:'시간 압축', icon:'🌀', desc:'이번 턴 추가 이동 비용 무료', needsTarget:false },
+  shield:        { name:'시간 방패', icon:'🛡️', desc:'다음 피해 2 경감', needsTarget:false },
+  swap:          { name:'시간 교환', icon:'🔀', desc:'상대와 위치 교환', needsTarget:true },
+  charge_burst:  { name:'긴급 충전', icon:'🔋', desc:'+3시간, 다음 턴 이동 불가', needsTarget:false },
+  malfunction:   { name:'시계 고장', icon:'⚙️', desc:'상대 다음 행동비용 +2', needsTarget:true },
+  freeze:        { name:'시간 동결', icon:'🧊', desc:'상대 다음 턴 이동 불가', needsTarget:true },
+  rewind:        { name:'되감기',   icon:'⏪', desc:'직전 위치로 복귀, 비용 반환', needsTarget:false },
+  shadow:        { name:'그림자 이동', icon:'👤', desc:'이번 턴 공격 대상 제외', needsTarget:false },
+};
+const CARD_POOL = Object.keys(CARD_DEFS);
+function drawRandomCard(){ return CARD_POOL[Math.floor(Math.random()*CARD_POOL.length)]; }
+
+/* ============================================================
+   3. 플레이어 초기화
+   ============================================================ */
+const PLAYER_COLORS = ['#4dabf7','#ff6b6b','#69db7c','#ffd43b'];
+const PLAYER_ICONS = ['😀','🥷','🤑','🧭'];
+const START_COORDS = [ {col:0,row:0}, {col:6,row:0}, {col:0,row:6}, {col:6,row:6} ];
+
+function makePlayer(id, name, type, personality, start){
+  return {
+    id, name, type, personality,
+    color: PLAYER_COLORS[id], icon: PLAYER_ICONS[id],
+    col: start.col, row: start.row,
+    time: 24,
+    hand: [],
+    bankedTime: 0,
+    escapeMode: false,
+    escapeTurnsLeft: 0,
+    escapeUsed: false,
+    alive: true,
+    movesThisTurn: 0,
+    cardUsedThisTurn: false,
+    actionUsedThisTurn: false,
+    shieldAmount: 0,
+    freeExtraMove: false,
+    skipNextMove: false,
+    extraCostNext: 0,
+    frozenNextMove: false,
+    shadowActive: false,
+    lastMove: null,
+    visited: new Set([cellKey(start.col,start.row)]),
+  };
+}
+
+let players = [
+  makePlayer(0, '나', 'human', null, START_COORDS[0]),
+  makePlayer(1, '무법자', 'ai', {aggro:0.85, caution:0.15, hoarding:0.10}, START_COORDS[1]),
+  makePlayer(2, '은행가', 'ai', {aggro:0.20, caution:0.60, hoarding:0.90}, START_COORDS[2]),
+  makePlayer(3, '탐험가', 'ai', {aggro:0.40, caution:0.30, hoarding:0.30}, START_COORDS[3]),
+];
+
+let currentPlayerIdx = 0;
+let round = 1;
+let gameOver = false;
+let uiLocked = false;
+
+/* ============================================================
+   4. 캔버스 렌더링
+   ============================================================ */
+const canvas = document.getElementById('board');
+const ctx = canvas.getContext('2d');
+
+function isAdjacent(a,b){ return manhattan(a,b) === 1; }
+function alivePlayers(){ return players.filter(p=>p.alive); }
+function adjacentEnemies(p){
+  return players.filter(o => o.id!==p.id && o.alive && isAdjacent(p,o) && !o.shadowActive);
+}
+
+function draw(){
+  ctx.clearRect(0,0,canvas.width,canvas.height);
+  const cur = players[currentPlayerIdx];
+
+  for (let row=0; row<7; row++){
+    for (let col=0; col<7; col++){
+      const state = cellStates[cellKey(col,row)];
+      const info = CELL_TYPE[state.type];
+      const x = col*SIZE, y = row*SIZE;
+
+      ctx.fillStyle = info.color;
+      ctx.fillRect(x+1, y+1, SIZE-2, SIZE-2);
+
+      if (state.type === 'BUILDING' && state.occupiedBy !== null){
+        ctx.strokeStyle = players[state.occupiedBy].color;
+        ctx.lineWidth = 2.5;
+        ctx.strokeRect(x+2.5,y+2.5,SIZE-5,SIZE-5);
+      }
+
+      if (info.icon){
+        ctx.font = '20px sans-serif';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(info.icon, x+SIZE/2, y+SIZE/2-2);
+      }
+
+      if (cur.alive && cur.type==='human' && !uiLocked && !cur.frozenNextMove && isAdjacent(cur,{col,row})){
+        ctx.strokeStyle = 'rgba(255,255,255,0.6)';
+        ctx.lineWidth = 2;
+        ctx.strokeRect(x+3,y+3,SIZE-6,SIZE-6);
+      }
+    }
+  }
+  ctx.textAlign = 'left';
+  ctx.textBaseline = 'alphabetic';
+
+  players.forEach(p=>{
+    if (!p.alive) return;
+    const cx = p.col*SIZE + SIZE/2;
+    const cy = p.row*SIZE + SIZE/2;
+    const ox = (p.id % 2 === 0 ? -1:1) * 9;
+    const oy = (p.id < 2 ? -1:1) * 9 + 12;
+
+    ctx.beginPath();
+    ctx.arc(cx+ox, cy+oy, 9, 0, Math.PI*2);
+    ctx.fillStyle = p.color;
+    ctx.fill();
+    ctx.strokeStyle = p.id===currentPlayerIdx ? '#fff' : 'rgba(0,0,0,0.4)';
+    ctx.lineWidth = p.id===currentPlayerIdx ? 2 : 1;
+    ctx.stroke();
+
+    ctx.font = '10px sans-serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(p.icon, cx+ox, cy+oy+1);
+    ctx.textAlign = 'left';
+    ctx.textBaseline = 'alphabetic';
+
+    if (p.escapeMode){
+      ctx.fillStyle = '#ff6b6b';
+      ctx.font = 'bold 9px sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText('!', cx+ox, cy+oy-10);
+      ctx.textAlign = 'left';
+    }
+  });
+}
+
+function canvasScale(){
+  const rect = canvas.getBoundingClientRect();
+  return { sx: canvas.width/rect.width, sy: canvas.height/rect.height, rect };
+}
+
+/* ============================================================
+   5. 로그 & 패널
+   ============================================================ */
+function log(msg){
+  const el = document.getElementById('log');
+  const div = document.createElement('div');
+  div.textContent = msg;
+  el.prepend(div);
+}
+
+let logOpen = false;
+document.getElementById('logToggle').addEventListener('click', ()=>{
+  logOpen = !logOpen;
+  document.getElementById('log').classList.toggle('collapsed', !logOpen);
+  document.getElementById('logChevron').textContent = logOpen ? '▴' : '▾';
+});
+document.getElementById('log').classList.add('collapsed');
+
+function buildingCountOf(playerId){
+  return Object.values(cellStates).filter(c=>c.type==='BUILDING' && c.occupiedBy===playerId).length;
+}
+
+function refresh(){
+  draw();
+  document.getElementById('roundLabel').textContent = `R${Math.min(round,TOTAL_ROUNDS)}/${TOTAL_ROUNDS}`;
+
+  const strip = document.getElementById('playerStrip');
+  strip.innerHTML = '';
+  players.forEach(p=>{
+    const chip = document.createElement('div');
+    chip.className = 'p-chip' + (p.id===currentPlayerIdx?' active':'') + (!p.alive?' dead':'');
+    chip.innerHTML = `
+      ${p.escapeMode?'<span class="esc">탈출</span>':''}
+      <span class="dot" style="background:${p.color}"></span>
+      <span class="t">${p.time}h</span>
+      <span class="n">${p.icon} ${p.name}</span>
+    `;
+    strip.appendChild(chip);
+  });
+
+  const cur = players[currentPlayerIdx];
+  const isHumanTurn = cur.alive && cur.type==='human' && !gameOver && !uiLocked;
+  const curState = cellStates[cellKey(cur.col,cur.row)];
+
+  document.getElementById('attackBtn').disabled = !isHumanTurn || cur.escapeMode || cur.actionUsedThisTurn || adjacentEnemies(cur).length===0;
+  document.getElementById('occupyBtn').disabled = !isHumanTurn || cur.actionUsedThisTurn || curState.type!=='BUILDING' || curState.occupiedBy===cur.id;
+  document.getElementById('bankBtn').disabled = !isHumanTurn || cur.actionUsedThisTurn || curState.type!=='BANK' || cur.time<=0;
+  document.getElementById('restBtn').disabled = !isHumanTurn || cur.actionUsedThisTurn;
+  document.getElementById('endTurnBtn').disabled = !isHumanTurn;
+
+  const handList = document.getElementById('handList');
+  handList.innerHTML = '';
+  if (cur.type==='human'){
+    if (cur.hand.length===0){
+      handList.innerHTML = '<div class="empty-hint">보유 카드 없음 — 카드칸이나 건물 점령으로 획득</div>';
+    } else {
+      cur.hand.forEach((cardId, idx)=>{
+        const def = CARD_DEFS[cardId];
+        const div = document.createElement('div');
+        const usable = isHumanTurn && !cur.cardUsedThisTurn;
+        div.className = 'hc' + (usable?'':' disabled');
+        div.innerHTML = `<b>${def.icon} ${def.name}</b>${def.desc}`;
+        if (usable) div.onclick = () => useCard(cur, idx);
+        handList.appendChild(div);
+      });
+    }
+  } else {
+    handList.innerHTML = '<div class="empty-hint">AI 턴 진행 중…</div>';
+  }
+}
+
+/* ============================================================
+   6. 셀 진입 효과
+   ============================================================ */
+function onEnterCell(player, state, col, row){
+  player.visited.add(cellKey(col,row));
+
+  switch(state.type){
+    case 'DANGER': {
+      const dmg = applyDamage(player, 1);
+      log(`${player.name}: 💀 위험지역, -${dmg}시간 (${player.time}h)`);
+      break;
+    }
+    case 'CHARGE': {
+      const ready = state.chargeUsedRound<0 || (round-state.chargeUsedRound)>=CHARGE_RECHARGE_ROUNDS;
+      if (ready){
+        player.time += 2;
+        state.chargeUsedRound = round;
+        log(`${player.name}: ⚡ 충전, +2시간 (${player.time}h)`);
+      } else {
+        log(`${player.name}: ⚡ 충전소 재활성화 대기 중`);
+      }
+      break;
+    }
+    case 'CARD': {
+      if (player.hand.length < 3){
+        const c = drawRandomCard();
+        player.hand.push(c);
+        log(`${player.name}: 🎴 카드 획득 — ${CARD_DEFS[c].name}`);
+      } else {
+        log(`${player.name}: 🎴 카드칸 도착, 손패 가득 참`);
+      }
+      break;
+    }
+    case 'TIME_GATE': {
+      if (player.escapeMode){
+        player.time += 6;
+        player.escapeMode = false;
+        player.escapeUsed = true;
+        log(`${player.name}: 🌀 탈출 성공! +6시간 (${player.time}h)`);
+      }
+      break;
+    }
+    case 'BUILDING': {
+      if (state.occupiedBy !== null && state.occupiedBy !== player.id && state.trap){
+        revealTrap(player, state);
+      }
+      break;
+    }
+    default: break;
+  }
+
+  checkEscapeModeEnter(player);
+  checkElimination(player);
+}
+
+function revealTrap(player, state){
+  const t = state.trap;
+  state.trap = null;
+  if (t==='trap'){ applyDamage(player,2); log(`${player.name}: 💥 함정 발동! -2시간 (${player.time}h)`); }
+  else if (t==='reward'){ player.time += 2; log(`${player.name}: 🎁 보상 발견, +2시간 (${player.time}h)`); }
+  else { log(`${player.name}: 🕳️ 빈 함정이었음`); }
+}
+
+function applyDamage(player, amount){
+  let dmg = amount;
+  if (player.shieldAmount > 0){
+    const absorbed = Math.min(player.shieldAmount, dmg);
+    dmg -= absorbed;
+    player.shieldAmount -= absorbed;
+    if (absorbed>0) log(`${player.name}: 🛡️ 방패로 ${absorbed}시간 경감`);
+  }
+  player.time -= dmg;
+  return dmg;
+}
+
+function checkEscapeModeEnter(player){
+  if (player.time<=3 && !player.escapeMode && !player.escapeUsed){
+    player.escapeMode = true;
+    player.escapeTurnsLeft = 3;
+    log(`⚠ ${player.name}: 탈출 모드 진입! 3턴 내 🌀 시간문 도착 필요`);
+  }
+}
+
+function checkElimination(player){
+  if (player.time<=0 && player.alive){
+    player.alive = false;
+    log(`☠ ${player.name}: 탈락`);
+  }
+}
+
+/* ============================================================
+   7. 이동
+   ============================================================ */
+function freeMovesAllowed(player){ return player.escapeMode ? 2 : 1; }
+
+function tryMove(col, row){
+  if (gameOver || uiLocked) return;
+  const player = players[currentPlayerIdx];
+  if (player.type !== 'human' || !player.alive) return;
+  if (player.frozenNextMove){ log(`${player.name}: 동결 상태 — 이동 불가`); return; }
+  if (!isAdjacent(player, {col,row})) return;
+
+  const freeLimit = freeMovesAllowed(player);
+  const isPaidMove = player.movesThisTurn >= freeLimit;
+  let cost = isPaidMove ? 1 : 0;
+  if (isPaidMove && player.freeExtraMove) cost = 0;
+
+  if (cost>0 && player.time<cost){ log(`${player.name}: 시간 부족 — 추가 이동 불가`); return; }
+
+  player.lastMove = { col: player.col, row: player.row, cost };
+  player.time -= cost;
+  player.col = col; player.row = row;
+  player.movesThisTurn += 1;
+
+  if (cost>0) log(`${player.name}: 추가 이동, -1시간 (${player.time}h)`);
+  else log(`${player.name}: 이동`);
+
+  const state = cellStates[cellKey(col,row)];
+  onEnterCell(player, state, col, row);
+  refresh();
+}
+
+canvas.addEventListener('click', (e)=>{
+  const { sx, sy, rect } = canvasScale();
+  const x = (e.clientX - rect.left) * sx;
+  const y = (e.clientY - rect.top) * sy;
+  const col = Math.floor(x/SIZE), row = Math.floor(y/SIZE);
+  if (col<0||col>6||row<0||row>6) return;
+  tryMove(col,row);
+});
+
+/* ============================================================
+   8. 전투
+   ============================================================ */
+const CHOICES = ['강공','방어','회피'];
+function beats(a,b){ return (a==='강공'&&b==='회피')||(a==='회피'&&b==='방어')||(a==='방어'&&b==='강공'); }
+
+function weightedChoice(personality, role){
+  let w = { '강공':1, '방어':1, '회피':1 };
+  if (role==='attack'){
+    w['강공'] += personality.aggro*2;
+    w['방어'] += personality.caution*0.5;
+  } else {
+    w['방어'] += personality.caution*2;
+    w['회피'] += (1-personality.caution)*0.5;
+  }
+  const total = w['강공']+w['방어']+w['회피'];
+  let r = Math.random()*total;
+  for (const c of CHOICES){ if (r<w[c]) return c; r -= w[c]; }
+  return '회피';
+}
+
+function startAttack(attacker, defender){
+  attacker.actionUsedThisTurn = true;
+  attacker.time -= 2;
+  log(`${attacker.name} ⚔️ ${defender.name} 공격 시도 (-2h, ${attacker.time}h)`);
+  checkElimination(attacker);
+  if (!attacker.alive){ refresh(); return; }
+
+  if (attacker.type==='human'){
+    showCombatModal('강공 / 방어 / 회피를 선택하세요', (choice)=>{
+      if (defender.type==='human'){
+        showCombatModal('상대가 공격합니다! 방어를 선택하세요', (dChoice)=>{
+          resolveCombat(attacker, defender, choice, dChoice);
+        });
+      } else {
+        const defChoice = weightedChoice(defender.personality,'defend');
+        resolveCombat(attacker, defender, choice, defChoice);
+      }
+    });
+  } else {
+    const atkChoice = weightedChoice(attacker.personality,'attack');
+    if (defender.type==='human'){
+      showCombatModal(`${defender.icon===undefined?'':''}${attacker.name}이(가) 당신을 공격합니다! 방어를 선택하세요`, (dChoice)=>{
+        resolveCombat(attacker, defender, atkChoice, dChoice);
+      });
+    } else {
+      const dChoice = weightedChoice(defender.personality,'defend');
+      resolveCombat(attacker, defender, atkChoice, dChoice);
+    }
+  }
+}
+
+function resolveCombat(attacker, defender, atkChoice, defChoice){
+  log(`⚔️ ${attacker.name}[${atkChoice}] vs ${defender.name}[${defChoice}]`);
+  if (atkChoice === defChoice){
+    applyDamage(attacker,1); applyDamage(defender,1);
+    log(`무승부 — 양쪽 -1시간`);
+  } else if (beats(atkChoice, defChoice)){
+    applyDamage(defender,3);
+    attacker.time += 1;
+    log(`공격자 승리 — 방어자 -3h / 공격자 +1h`);
+  } else {
+    applyDamage(attacker,2);
+    log(`방어자 승리 — 공격자 -2h`);
+  }
+  checkElimination(attacker);
+  checkElimination(defender);
+  checkEscapeModeEnter(attacker);
+  checkEscapeModeEnter(defender);
+  refresh();
+}
+
+/* ============================================================
+   9. 카드 사용
+   ============================================================ */
+function useCard(player, idx){
+  if (player.cardUsedThisTurn || uiLocked) return;
+  const cardId = player.hand[idx];
+  const def = CARD_DEFS[cardId];
+
+  const applyAndConsume = (targetPlayer) => {
+    applyCardEffect(player, cardId, targetPlayer);
+    player.hand.splice(idx,1);
+    player.cardUsedThisTurn = true;
+    refresh();
+  };
+
+  if (def.needsTarget){
+    const targets = players.filter(p=>p.id!==player.id && p.alive);
+    showTargetModal(`${def.name} — 대상 선택`, targets, (target)=>applyAndConsume(target));
+  } else {
+    applyAndConsume(null);
+  }
+}
+
+function applyCardEffect(player, cardId, target){
+  switch(cardId){
+    case 'compress':
+      player.freeExtraMove = true;
+      log(`${player.name}: 🌀 시간 압축 — 추가 이동 무료`);
+      break;
+    case 'shield':
+      player.shieldAmount += 2;
+      log(`${player.name}: 🛡️ 시간 방패 — 다음 피해 2 경감`);
+      break;
+    case 'swap': {
+      const tc = target.col, tr = target.row;
+      target.col = player.col; target.row = player.row;
+      player.col = tc; player.row = tr;
+      log(`${player.name}: 🔀 시간 교환 — ${target.name}과 위치 교체`);
+      break;
+    }
+    case 'charge_burst':
+      player.time += 3;
+      player.skipNextMove = true;
+      log(`${player.name}: 🔋 긴급 충전 — +3시간, 다음턴 이동 불가`);
+      break;
+    case 'malfunction':
+      target.extraCostNext += 2;
+      log(`${player.name}: ⚙️ 시계 고장 — ${target.name} 다음 행동비용 +2`);
+      break;
+    case 'freeze':
+      target.frozenNextMove = true;
+      log(`${player.name}: 🧊 시간 동결 — ${target.name} 다음턴 이동 불가`);
+      break;
+    case 'rewind':
+      if (player.lastMove){
+        player.col = player.lastMove.col;
+        player.row = player.lastMove.row;
+        player.time += player.lastMove.cost;
+        log(`${player.name}: ⏪ 되감기 — 이전 위치 복귀`);
+        player.lastMove = null;
+      } else {
+        log(`${player.name}: ⏪ 되돌릴 이동 기록 없음`);
+      }
+      break;
+    case 'shadow':
+      player.shadowActive = true;
+      log(`${player.name}: 👤 그림자 이동 — 이번 턴 공격 대상 제외`);
+      break;
+  }
+}
+
+/* ============================================================
+   10. 건물 점령 / 은행 예치 / 휴식
+   ============================================================ */
+document.getElementById('attackBtn').addEventListener('click', ()=>{
+  const cur = players[currentPlayerIdx];
+  if (cur.actionUsedThisTurn) return;
+  const enemies = adjacentEnemies(cur);
+  if (enemies.length===0) return;
+  if (enemies.length===1){ startAttack(cur, enemies[0]); refresh(); }
+  else showTargetModal('공격 대상 선택', enemies, (t)=>{ startAttack(cur,t); refresh(); });
+});
+
+document.getElementById('occupyBtn').addEventListener('click', ()=>{
+  const player = players[currentPlayerIdx];
+  const state = cellStates[cellKey(player.col,player.row)];
+  if (state.type!=='BUILDING' || state.occupiedBy===player.id || player.actionUsedThisTurn) return;
+
+  let cost = 2 + (player.extraCostNext||0);
+  player.extraCostNext = 0;
+  if (player.time < cost){ log(`${player.name}: 시간 부족 — 점령 불가`); return; }
+
+  player.time -= cost;
+  const wasEnemyOwned = state.occupiedBy!==null;
+  state.occupiedBy = player.id;
+  state.trap = ['trap','empty','reward'][Math.floor(Math.random()*3)];
+  player.actionUsedThisTurn = true;
+
+  log(`${player.name}: 🏢 건물 점령${wasEnemyOwned?' (탈환)':''}, -${cost}시간`);
+  if (player.hand.length<3){
+    const c = drawRandomCard();
+    player.hand.push(c);
+    log(`${player.name}: 점령 보상 카드 — ${CARD_DEFS[c].name}`);
+  }
+  checkElimination(player);
+  refresh();
+});
+
+document.getElementById('bankBtn').addEventListener('click', ()=>{
+  const player = players[currentPlayerIdx];
+  const state = cellStates[cellKey(player.col,player.row)];
+  if (state.type!=='BANK' || player.actionUsedThisTurn) return;
+  showAmountModal(player.time, (amount)=>{
+    if (amount<=0 || amount>player.time) return;
+    player.time -= amount;
+    player.bankedTime += amount;
+    player.actionUsedThisTurn = true;
+    log(`${player.name}: 🏦 ${amount}시간 예치 (보유 ${player.time}h/은행 ${player.bankedTime}h)`);
+    refresh();
+  });
+});
+
+document.getElementById('restBtn').addEventListener('click', ()=>{
+  const player = players[currentPlayerIdx];
+  if (player.actionUsedThisTurn) return;
+  player.time += 2;
+  player.actionUsedThisTurn = true;
+  log(`${player.name}: 💤 휴식 — +2시간 (${player.time}h)`);
+  refresh();
+});
+
+document.getElementById('endTurnBtn').addEventListener('click', ()=>{ nextTurn(); });
+
+/* ============================================================
+   11. 모달
+   ============================================================ */
+const modalRoot = document.getElementById('modalRoot');
+
+function showCombatModal(title, onChoose){
+  uiLocked = true;
+  modalRoot.innerHTML = `
+    <div class="overlay">
+      <div class="modal">
+        <h3>${title}</h3>
+        <div class="choices">
+          <button data-c="강공">💪<br>강공</button>
+          <button data-c="방어">🛡️<br>방어</button>
+          <button data-c="회피">💨<br>회피</button>
+        </div>
+      </div>
+    </div>`;
+  modalRoot.querySelectorAll('button').forEach(btn=>{
+    btn.onclick = ()=>{ modalRoot.innerHTML=''; uiLocked=false; onChoose(btn.dataset.c); };
+  });
+}
+
+function showTargetModal(title, targets, onChoose){
+  uiLocked = true;
+  modalRoot.innerHTML = `
+    <div class="overlay">
+      <div class="modal">
+        <h3>${title}</h3>
+        <div class="target-list"></div>
+      </div>
+    </div>`;
+  const list = modalRoot.querySelector('.target-list');
+  targets.forEach(t=>{
+    const b = document.createElement('button');
+    b.textContent = `${t.icon} ${t.name} (${t.time}h)`;
+    b.onclick = ()=>{ modalRoot.innerHTML=''; uiLocked=false; onChoose(t); };
+    list.appendChild(b);
+  });
+}
+
+function showAmountModal(max, onConfirm){
+  uiLocked = true;
+  modalRoot.innerHTML = `
+    <div class="overlay">
+      <div class="modal">
+        <h3>예치할 시간 (최대 ${max})</h3>
+        <input type="number" id="amountInput" min="0" max="${max}" value="${Math.min(max,5)}" inputmode="numeric">
+        <button class="wide" id="amountConfirm">예치하기</button>
+        <button class="wide secondary" id="amountCancel">취소</button>
+      </div>
+    </div>`;
+  document.getElementById('amountConfirm').onclick = ()=>{
+    const val = parseInt(document.getElementById('amountInput').value,10) || 0;
+    modalRoot.innerHTML=''; uiLocked=false; onConfirm(val);
+  };
+  document.getElementById('amountCancel').onclick = ()=>{ modalRoot.innerHTML=''; uiLocked=false; };
+}
+
+/* ============================================================
+   12. 턴 진행
+   ============================================================ */
+function resetTurnFlags(player){
+  player.movesThisTurn = 0;
+  player.cardUsedThisTurn = false;
+  player.actionUsedThisTurn = false;
+  player.freeExtraMove = false;
+}
+
+let lastTurnIdx = 0;
+
+function nextTurn(){
+  if (gameOver) return;
+  const player = players[currentPlayerIdx];
+
+  if (player.alive && player.escapeMode){
+    player.escapeTurnsLeft -= 1;
+    if (player.escapeTurnsLeft <= 0){
+      player.alive = false;
+      log(`☠ ${player.name}: 탈출 시간 초과로 탈락`);
+    }
+  }
+
+  resetTurnFlags(player);
+
+  if (alivePlayers().length === 0){ endGame(); return; }
+
+  let next = currentPlayerIdx;
+  for (let i=0;i<players.length;i++){
+    next = (next+1) % players.length;
+    if (players[next].alive) break;
+  }
+
+  if (next <= lastTurnIdx){
+    round += 1;
+    if (round > TOTAL_ROUNDS){ endGame(); return; }
+  }
+  lastTurnIdx = next;
+  currentPlayerIdx = next;
+
+  refresh();
+  maybeRunAITurn();
+}
+
+function maybeRunAITurn(){
+  if (gameOver) return;
+  const player = players[currentPlayerIdx];
+  if (player.type !== 'ai' || !player.alive){
+    refresh();
+    return;
+  }
+  setTimeout(()=>{ aiTakeTurn(player); }, 400);
+}
+
+/* ============================================================
+   13. AI 로직
+   ============================================================ */
+function nearestCell(from, cellList, filterFn){
+  let best=null, bestDist=Infinity;
+  cellList.forEach(c=>{
+    if (filterFn && !filterFn(c)) return;
+    const d = manhattan(from,c);
+    if (d<bestDist){ bestDist=d; best=c; }
+  });
+  return best ? {cell:best, dist:bestDist} : null;
+}
+
+function isChargeReady(cell){
+  const s = cellStates[cellKey(cell.col,cell.row)];
+  return s.chargeUsedRound<0 || (round-s.chargeUsedRound)>=CHARGE_RECHARGE_ROUNDS;
+}
+
+function computeAttackScore(ai, target){
+  const maxTime = Math.max(...alivePlayers().map(p=>p.time));
+  let score = 20 + ai.personality.aggro*30;
+  if (target.time === maxTime) score += 15;
+  if (target.time <= 6) score += 10;
+  if (ai.time <= 8) score -= 25;
+  const failRisk = target.type==='ai' ? target.personality.caution : 0.4;
+  score -= failRisk*20;
+  return score;
+}
+
+function computeBankScore(ai, dist){
+  const exceed = Math.max(0, ai.time-10);
+  const nearbyEnemies = alivePlayers().filter(p=>p.id!==ai.id && manhattan(p,ai)<=2).length;
+  return exceed*3 + ai.personality.hoarding*25 - dist*4 - nearbyEnemies*8;
+}
+
+function computeChargeScore(ai, dist, ready){
+  const needed = Math.max(0, 15-ai.time);
+  return needed*2 + (ready?20:0) - dist*3;
+}
+
+function computeOccupyScore(ai, ownedByEnemy){
+  let score = 15 + (ownedByEnemy?10:0);
+  if (ai.time<4) score -= 30;
+  return score;
+}
+
+function aiTakeTurn(ai){
+  if (!ai.alive){ nextTurn(); return; }
+
+  if (ai.escapeMode){
+    stepToward(ai, GATE_POS);
+    endAiTurnAfterDelay();
+    return;
+  }
+
+  if (ai.frozenNextMove){
+    log(`${ai.name}: 🧊 동결 — 이번 턴 이동 불가`);
+    ai.frozenNextMove = false;
+    endAiTurnAfterDelay();
+    return;
+  }
+  if (ai.skipNextMove){
+    log(`${ai.name}: 🔋 긴급충전 여파 — 이번 턴 이동 불가`);
+    ai.skipNextMove = false;
+    endAiTurnAfterDelay();
+    return;
+  }
+
+  const curState = cellStates[cellKey(ai.col,ai.row)];
+  const candidates = [];
+
+  const enemies = adjacentEnemies(ai);
+  if (enemies.length>0){
+    let best = null, bestScore=-Infinity;
+    enemies.forEach(e=>{
+      let s = computeAttackScore(ai,e);
+      if (ai.personality.aggro>0.7){
+        if (e.time > ai.time) s += 10;
+      }
+      if (s>bestScore){ bestScore=s; best=e; }
+    });
+    candidates.push({action:'attack', score:bestScore, target:best});
+  }
+
+  if (curState.type==='BUILDING' && curState.occupiedBy!==ai.id){
+    const s = computeOccupyScore(ai, curState.occupiedBy!==null);
+    candidates.push({action:'occupy', score:s});
+  }
+
+  if (curState.type==='BANK' && ai.time>10){
+    candidates.push({action:'bank', score: computeBankScore(ai,0)});
+  }
+
+  const moveTarget = pickMoveTarget(ai);
+  candidates.push({action:'move', score: moveTarget.score, target: moveTarget.cell});
+
+  candidates.sort((a,b)=>b.score-a.score);
+  const choice = candidates[0];
+
+  if (choice.action==='attack'){
+    startAttack(ai, choice.target);
+    endAiTurnAfterDelay();
+  } else if (choice.action==='occupy'){
+    const cost = 2 + (ai.extraCostNext||0);
+    ai.extraCostNext = 0;
+    if (ai.time>=cost){
+      ai.time -= cost;
+      const wasEnemy = curState.occupiedBy!==null;
+      curState.occupiedBy = ai.id;
+      curState.trap = ['trap','empty','reward'][Math.floor(Math.random()*3)];
+      log(`${ai.name}: 🏢 건물 점령${wasEnemy?' (탈환)':''}, -${cost}시간`);
+      if (ai.hand.length<3){ const c=drawRandomCard(); ai.hand.push(c); log(`${ai.name}: 점령 보상 카드 획득`); }
+      checkElimination(ai);
+    }
+    endAiTurnAfterDelay();
+  } else if (choice.action==='bank'){
+    const amount = Math.max(0, ai.time-8);
+    if (amount>0){
+      ai.time -= amount; ai.bankedTime += amount;
+      log(`${ai.name}: 🏦 ${amount}시간 예치`);
+    }
+    endAiTurnAfterDelay();
+  } else {
+    stepToward(ai, choice.target);
+    endAiTurnAfterDelay();
+  }
+}
+
+function endAiTurnAfterDelay(){
+  refresh();
+  setTimeout(()=>{ nextTurn(); }, 500);
+}
+
+function pickMoveTarget(ai){
+  const options = [];
+
+  const nearestCharge = nearestCell(ai, CHARGE_CELLS, c=>isChargeReady(c));
+  if (nearestCharge) options.push({ cell:nearestCharge.cell, score: computeChargeScore(ai, nearestCharge.dist, true) });
+
+  const nearestBank = nearestCell(ai, BANK_CELLS);
+  if (nearestBank) options.push({ cell:nearestBank.cell, score: computeBankScore(ai, nearestBank.dist) });
+
+  const unclaimedBuildings = Object.entries(cellStates)
+    .filter(([k,s])=>s.type==='BUILDING' && s.occupiedBy!==ai.id)
+    .map(([k])=>{ const [c,r]=k.split(',').map(Number); return {col:c,row:r}; });
+  const nearestBuilding = nearestCell(ai, unclaimedBuildings);
+  if (nearestBuilding){
+    let s = 15 - nearestBuilding.dist*3;
+    options.push({ cell:nearestBuilding.cell, score:s });
+  }
+
+  const nearestCard = nearestCell(ai, CARD_CELLS);
+  if (nearestCard){
+    let s = 10 - nearestCard.dist*3;
+    if (!ai.visited.has(cellKey(nearestCard.cell.col,nearestCard.cell.row))) s += 15;
+    options.push({ cell:nearestCard.cell, score:s });
+  }
+
+  if (options.length===0){
+    const neighbors = validNeighbors(ai.col, ai.row);
+    const cell = neighbors[Math.floor(Math.random()*neighbors.length)];
+    return { cell, score:0 };
+  }
+
+  options.sort((a,b)=>b.score-a.score);
+  return options[0];
+}
+
+function validNeighbors(col,row){
+  const out = [];
+  [[0,1],[0,-1],[1,0],[-1,0]].forEach(([dc,dr])=>{
+    const c=col+dc, r=row+dr;
+    if (c>=0&&c<7&&r>=0&&r<7) out.push({col:c,row:r});
+  });
+  return out;
+}
+
+function stepToward(ai, target){
+  const neighbors = validNeighbors(ai.col, ai.row);
+  let best = neighbors[0], bestDist = Infinity;
+  neighbors.forEach(n=>{
+    const d = manhattan(n, target);
+    if (d<bestDist){ bestDist=d; best=n; }
+  });
+
+  ai.lastMove = { col: ai.col, row: ai.row, cost:0 };
+  ai.col = best.col; ai.row = best.row;
+  log(`${ai.name}: 이동 (${COLS[best.col]}${best.row+1})`);
+  const state = cellStates[cellKey(best.col,best.row)];
+  onEnterCell(ai, state, best.col, best.row);
+}
+
+/* ============================================================
+   14. 게임 종료
+   ============================================================ */
+function endGame(){
+  gameOver = true;
+  const scored = players.map(p=>({
+    p,
+    total: p.time + p.bankedTime + buildingCountOf(p.id)*1,
+  })).sort((a,b)=>b.total-a.total);
+
+  log('=== 게임 종료 ===');
+  let html = `<div class="overlay"><div class="modal">
+    <h3>🏆 게임 종료 — 최종 순위</h3>`;
+  scored.forEach((s,i)=>{
+    html += `<div class="final-rank"><b>${i+1}위</b> ${s.p.icon} ${s.p.name} — 총 ${s.total}점
+      <br><span style="color:#888;font-size:11px;">보유 ${s.p.time}h + 은행 ${s.p.bankedTime}h + 건물 ${buildingCountOf(s.p.id)}개${s.p.alive?'':' (탈락)'}</span></div>`;
+    log(`${i+1}위: ${s.p.name} — 총 ${s.total}점`);
+  });
+  html += `<button class="wide" id="closeResult">닫기</button>
+  </div></div>`;
+  modalRoot.innerHTML = html;
+  document.getElementById('closeResult').onclick = ()=>{ modalRoot.innerHTML=''; };
+
+  refresh();
+}
+
+/* ============================================================
+   시작
+   ============================================================ */
+log('게임 시작 — 아래 흰 테두리 칸을 탭해 이동하세요.');
+refresh();
+
+let seenTutorial = false;
+try { seenTutorial = localStorage.getItem('time24_seen_tutorial') === '1'; } catch(e){}
+if (!seenTutorial) showTutorial();
+
+/* ---------- 서비스워커 등록 (오프라인 캐싱) ---------- */
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('./sw.js').catch((err) => {
+      console.warn('서비스워커 등록 실패:', err);
+    });
+  });
+}
+</script>
+</body>
+</html>
